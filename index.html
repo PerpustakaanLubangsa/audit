@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dekatoko - Realtime Multi-Audit</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .scan-focus:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        /* Animasi untuk baris baru yang masuk */
+        @keyframes highlight {
+            0% { background-color: #dbeafe; transform: translateX(-10px); }
+            100% { background-color: white; transform: translateX(0); }
+        }
+        .new-row { animation: highlight 1s ease-out forwards; }
+        
+        .empty-state { color: #cbd5e1; font-style: italic; text-align: center; padding: 40px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 tracking-tight">DEKATOKO <span class="text-blue-600">AUDIT</span></h1>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Multi-Scanner Realtime Active</p>
+                </div>
+            </div>
+            <div class="bg-white px-8 py-4 rounded-3xl shadow-sm border border-slate-200 text-center min-w-[150px]">
+                <span id="counter" class="text-4xl font-black text-slate-800">0</span>
+                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">Buku Terdata</p>
+            </div>
+        </header>
+
+        <div class="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100 mb-8 transition-all">
+            <div class="relative">
+                <input type="text" id="scanInput" 
+                       class="w-full p-6 text-3xl font-mono text-center border-2 border-slate-200 rounded-2xl scan-focus outline-none uppercase transition-all placeholder:text-slate-200" 
+                       placeholder="TEMBAK BARCODE..." autofocus autocomplete="off">
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-200 hidden md:block">
+                    <i class="fa-solid fa-barcode text-4xl"></i>
+                </div>
+            </div>
+            <div id="statusMsg" class="mt-4 font-bold text-sm h-5 text-center transition-all duration-300"></div>
+        </div>
+
+        <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Aktivitas Audit Terbaru</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50/50 border-b border-slate-200 text-[11px] uppercase text-slate-500 font-bold">
+                        <tr>
+                            <th class="p-4 w-32 text-center">Waktu</th>
+                            <th class="p-4">Informasi Buku</th>
+                            <th class="p-4">Barcode</th>
+                            <th class="p-4">Rak</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLog" class="divide-y divide-slate-100 text-sm italic text-slate-400">
+                        <tr id="initialPlaceholder">
+                            <td colspan="4" class="empty-state">Menunggu data pertama...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi Supabase
+        const SB_URL = 'https://heosadzwckwmbjhxydtm.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
+        const client = supabase.createClient(SB_URL, SB_KEY);
+
+        const scanInput = document.getElementById('scanInput');
+        const auditLog = document.getElementById('auditLog');
+        const counterDisplay = document.getElementById('counter');
+
+        // Fungsi Render Baris
+        function renderLogRow(log, isNew = false) {
+            // Hapus placeholder jika ada
+            const placeholder = document.getElementById('initialPlaceholder');
+            if (placeholder) placeholder.remove();
+
+            // Cegah double render untuk ID yang sama
+            if (document.getElementById(`row-${log.id}`)) return;
+
+            const time = new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const tr = document.createElement('tr');
+            tr.id = `row-${log.id}`;
+            tr.className = isNew ? 'new-row' : 'bg-white';
+            
+            tr.innerHTML = `
+                <td class="p-4 text-center font-mono text-[11px] text-slate-400">${time}</td>
+                <td class="p-4">
+                    <div class="font-bold text-slate-800 text-base">${log.judul_buku || 'Judul Tidak Diketahui'}</div>
+                </td>
+                <td class="p-4">
+                    <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full font-mono font-bold text-xs">${log.kode_barcode}</span>
+                </td>
+                <td class="p-4">
+                    <span class="text-[10px] font-black text-slate-500 uppercase bg-slate-100 px-2 py-1 rounded">${log.lokasi_rak || '-'}</span>
+                </td>
+            `;
+            
+            auditLog.insertBefore(tr, auditLog.firstChild);
+        }
+
+        // 1. Ambil data yang sudah ada di database saat buka halaman
+        async function loadExistingData() {
+            const { data, error } = await client.from('log_audit').select('*').order('created_at', { ascending: true });
+            if (data && data.length > 0) {
+                data.forEach(item => renderLogRow(item, false));
+                updateCounterDisplay();
+            }
+        }
+
+        // 2. Realtime Subscription (Mendengarkan scan dari scanner lain)
+        client.channel('audit-channel')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'log_audit' }, payload => {
+                renderLogRow(payload.new, true);
+                updateCounterDisplay();
+            })
+            .subscribe();
+
+        // 3. Logika Input Scanner
+        scanInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                const barcode = scanInput.value.trim().toUpperCase();
+                scanInput.value = '';
+                if (!barcode) return;
+
+                setStatus("🔍 Mengecek database...", "text-blue-500");
+
+                // Cek apakah sudah pernah di-scan (Global di log_audit)
+                const { data: duplicate } = await client.from('log_audit').select('id').eq('kode_barcode', barcode).maybeSingle();
+                
+                if (duplicate) {
+                    setStatus(`⚠️ DUPLIKAT: Barcode ${barcode} sudah tercatat!`, "text-orange-500");
+                    playTone(150, 500); // Nada peringatan
+                    return;
+                }
+
+                // Ambil info buku dari tabel bibliografi (ekslempar join biblio)
+                const { data: buku, error } = await client
+                    .from('ekslempar')
+                    .select('*, biblio(judul)')
+                    .eq('kode', barcode)
+                    .maybeSingle();
+
+                if (buku) {
+                    const payload = {
+                        kode_barcode: barcode,
+                        judul_buku: buku.biblio ? buku.biblio.judul : 'Judul tidak ditemukan',
+                        lokasi_rak: buku.lokasi_rak || 'Tanpa Lokasi'
+                    };
+
+                    // Simpan ke log_audit
+                    const { data: saved, error: saveErr } = await client.from('log_audit').insert([payload]).select();
+                    
+                    if (saved) {
+                        setStatus("✅ Berhasil Dicatat", "text-green-600");
+                        // Render langsung untuk feedback instan
+                        renderLogRow(saved[0], true);
+                        updateCounterDisplay();
+                    }
+                } else {
+                    setStatus("❌ GAGAL: Barcode tidak terdaftar!", "text-red-600");
+                    playTone(100, 800);
+                }
+            }
+        });
+
+        // Fungsi Helper
+        async function updateCounterDisplay() {
+            const { count } = await client.from('log_audit').select('*', { count: 'exact', head: true });
+            counterDisplay.innerText = count || 0;
+        }
+
+        function setStatus(msg, colorClass) {
+            const el = document.getElementById('statusMsg');
+            el.innerText = msg;
+            el.className = `mt-4 font-bold text-sm h-5 text-center ${colorClass}`;
+        }
+
+        function playTone(freq, dur) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = freq;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + dur/1000);
+            osc.stop(ctx.currentTime + dur/1000);
+        }
+
+        // Fokuskan input secara otomatis
+        document.addEventListener('click', () => scanInput.focus());
+        
+        // Jalankan saat startup
+        loadExistingData();
+    </script>
+</body>
+</html>
