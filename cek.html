@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Audit</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f4f4f5; font-family: sans-serif; font-size: 13px; }
+        .card { background: white; border: 1px solid #e4e4e7; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .checked { opacity: 0.5; background-color: #f1f5f9; border-left: 4px solid #94a3b8; }
+        .unchecked { border-left: 4px solid #eab308; }
+        .btn { padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; font-size: 11px; }
+        .btn-check { background: #18181b; color: white; }
+        .btn-undo { background: #e4e4e7; color: #3f3f46; }
+        header { background: white; padding: 15px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; position: sticky; top: 0; z-index: 10; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="max-width: 800px; margin: auto; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 style="margin:0; font-size: 18px;">DEKATOKO <span style="color: #eab308;">SISA AUDIT</span></h1>
+                <p style="margin:0; color: #71717a; font-size: 11px;">Buku yang tidak ditemukan saat scan barcode.</p>
+            </div>
+            <button onclick="fetchData()" style="background: #3b82f6; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                Refresh
+            </button>
+        </div>
+    </header>
+
+    <div style="max-width: 800px; margin: auto; padding: 0 10px;">
+        <div id="stats" style="margin-bottom: 15px; font-weight: bold; color: #3f3f46;"></div>
+        <div id="listContainer">
+            <p style="text-align: center; color: #a1a1aa;">Memuat data...</p>
+        </div>
+    </div>
+
+    <script>
+        const SB_URL = 'https://heosadzwckwmbjhxydtm.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
+        const client = supabase.createClient(SB_URL, SB_KEY);
+
+        async function fetchData() {
+            try {
+                // 1. Ambil data ekslempar & log audit sekaligus
+                const [resEks, resLog] = await Promise.all([
+                    client.from('ekslempar').select('id, kode, lokasi_rak, status_audit, biblio(judul)'),
+                    client.from('log_audit').select('kode_barcode')
+                ]);
+
+                const loggedCodes = new Set(resLog.data.map(l => l.kode_barcode));
+                
+                // 2. Filter hanya buku yang BELUM masuk di log_audit
+                const missingBooks = resEks.data.filter(b => !loggedCodes.has(b.kode));
+
+                // 3. Urutkan: yang belum dicek di atas, yang sudah dicek di bawah
+                missingBooks.sort((a, b) => {
+                    const statusA = a.status_audit === 'dicek' ? 1 : 0;
+                    const statusB = b.status_audit === 'dicek' ? 1 : 0;
+                    return statusA - statusB;
+                });
+
+                renderList(missingBooks);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderList(books) {
+            const container = document.getElementById('listContainer');
+            const stats = document.getElementById('stats');
+            
+            const totalDicek = books.filter(b => b.status_audit === 'dicek').length;
+            const sisaBenar = books.length - totalDicek;
+
+            stats.innerHTML = `Sisa Cari: ${sisaBenar} | Sudah Verifikasi: ${totalDicek}`;
+
+            if (books.length === 0) {
+                container.innerHTML = '<p style="text-align: center; padding: 50px; color: #10b981;">Semua buku sudah ter-absen!</p>';
+                return;
+            }
+
+            container.innerHTML = books.map(b => `
+                <div class="card ${b.status_audit === 'dicek' ? 'checked' : 'unchecked'}">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${b.biblio ? b.biblio.judul : 'Tanpa Judul'}</div>
+                        <div style="font-family: monospace; font-size: 10px; color: #3b82f6; margin-top: 2px;">${b.kode} • Rak: ${b.lokasi_rak || '-'}</div>
+                    </div>
+                    <button onclick="toggleStatus('${b.id}', '${b.status_audit}')" 
+                            class="btn ${b.status_audit === 'dicek' ? 'btn-undo' : 'btn-check'}">
+                        ${b.status_audit === 'dicek' ? 'Batal' : 'Sudah Cek'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function toggleStatus(id, currentStatus) {
+            const newStatus = currentStatus === 'dicek' ? 'belum' : 'dicek';
+            const { error } = await client
+                .from('ekslempar')
+                .update({ status_audit: newStatus })
+                .eq('id', id);
+
+            if (!error) fetchData();
+        }
+
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
