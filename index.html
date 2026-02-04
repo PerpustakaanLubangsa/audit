@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit System v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body, html { height: 100%; margin: 0; overflow: hidden; background: #f8fafc; }
+        .nav-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+        .nav-btn.active { color: #2563eb; background: #eff6ff; }
+        .nav-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #2563eb; }
+        iframe { width: 100%; height: calc(100vh - 64px); border: none; }
+    </style>
+</head>
+<body>
+    <nav class="bg-white shadow-sm border-b h-16 flex items-center justify-between px-6">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
+                <i class="fa-solid fa-layer-group text-white text-xs"></i>
+            </div>
+            <h1 class="font-black text-slate-800 tracking-tighter text-lg">AUDIT<span class="text-blue-600">PRO</span></h1>
+        </div>
+
+        <div class="flex h-full items-center">
+            <button onclick="openPage('audit.html', this)" class="nav-btn active px-6 h-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600">
+                <i class="fa-solid fa-barcode text-base"></i> <span class="hidden md:block">Pemindaian</span>
+            </button>
+            <button onclick="openPage('hasil.html', this)" class="nav-btn px-6 h-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600">
+                <i class="fa-solid fa-chart-pie text-base"></i> <span class="hidden md:block">Laporan</span>
+            </button>
+            <button onclick="openPage('cek.html', this)" class="nav-btn px-6 h-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-500 hover:text-amber-600">
+                <i class="fa-solid fa-clipboard-list text-base"></i> <span class="hidden md:block">Cek Sisa</span>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span class="text-[10px] font-black text-slate-400 uppercase">Live</span>
+        </div>
+    </nav>
+
+    <iframe id="mainFrame" src="audit.html"></iframe>
+
+    <script>
+        function openPage(url, btn) {
+            document.getElementById('mainFrame').src = url;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    </script>
+</body>
+</html>
