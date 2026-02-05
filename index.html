@@ -3,55 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit System v2</title>
+    <title>Audit Pro - Terminal Corner</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    
     <style>
-        body, html { height: 100%; margin: 0; overflow: hidden; background: #f8fafc; }
-        .nav-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
-        .nav-btn.active { color: #2563eb; background: #eff6ff; }
-        .nav-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #2563eb; }
-        iframe { width: 100%; height: calc(100vh - 64px); border: none; }
+        body, html { height: 100%; margin: 0; overflow: hidden; background: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Navigasi Pojok Kiri */
+        .nav-container {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 12px;
+        }
+
+        /* Nav Buttons Melebar Menciut */
+        .nav-btn { 
+            display: flex;
+            align-items: center;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 22px;
+            color: #64748b;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            white-space: nowrap;
+            max-width: 44px;
+        }
+        .nav-btn span {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s ease;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .nav-btn.active { 
+            max-width: 160px; 
+            background: #0891b2; 
+            color: white;
+            box-shadow: 0 8px 15px rgba(8, 145, 178, 0.3);
+        }
+        .nav-btn.active span { opacity: 1; transform: translateX(0); margin-left: 10px; }
+
+        /* Pojok Kanan Status */
+        .status-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 30px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        /* Typer Text Style */
+        .typer-box {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 180px;
+            border-left: 2px solid #e2e8f0;
+            padding-left: 15px;
+            margin-left: 5px;
+        }
+        .cursor { animation: blink 1s infinite; color: #0891b2; font-weight: bold; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .code-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #0891b2;
+            background: rgba(8, 145, 178, 0.08);
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        iframe { width: 100%; height: 100vh; border: none; }
     </style>
 </head>
 <body>
-    <nav class="bg-white shadow-sm border-b h-16 flex items-center justify-between px-6">
-        <div class="flex items-center gap-3">
-            <div class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
-                <i class="fa-solid fa-layer-group text-white text-xs"></i>
-            </div>
-            <h1 class="font-black text-slate-800 tracking-tighter text-lg">AUDIT<span class="text-blue-600">PRO</span></h1>
-        </div>
 
-        <div class="flex h-full items-center">
-            <button onclick="openPage('audit.html', this)" class="nav-btn active px-6 h-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600">
-                <i class="fa-solid fa-barcode text-base"></i> <span class="hidden md:block">Pemindaian</span>
+    <nav class="nav-container">
+        <div class="flex items-center gap-1">
+            <button onclick="openPage('audit.html', this)" class="nav-btn active">
+                <i class="fa-solid fa-expand"></i> 
+                <span>Scanner</span>
             </button>
-            <button onclick="openPage('hasil.html', this)" class="nav-btn px-6 h-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-blue-600">
-                <i class="fa-solid fa-chart-pie text-base"></i> <span class="hidden md:block">Laporan</span>
-            </button>
-            <button onclick="openPage('cek.html', this)" class="nav-btn px-6 h-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-500 hover:text-amber-600">
-                <i class="fa-solid fa-clipboard-list text-base"></i> <span class="hidden md:block">Cek Sisa</span>
+            <button onclick="openPage('hasil.html', this)" class="nav-btn">
+                <i class="fa-solid fa-layer-group"></i> 
+                <span>Laporan</span>
             </button>
         </div>
 
-        <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border">
-            <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            <span class="text-[10px] font-black text-slate-400 uppercase">Live</span>
+        <div class="typer-box hidden md:block">
+            <span id="typerText"></span><span class="cursor">_</span>
         </div>
     </nav>
+
+    <div class="status-container">
+        <div class="code-display italic">
+            &lt;LIVE_SYSTEM/&gt;
+        </div>
+        <div class="relative flex h-3 w-3">
+            <span class="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+        </div>
+    </div>
 
     <iframe id="mainFrame" src="audit.html"></iframe>
 
     <script>
-        function openPage(url, btn) {
-            document.getElementById('mainFrame').src = url;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        // Data Teks Typer
+        const phrases = [
+            "Initializing audit...",
+            "Syncing with database...",
+            "System secured 256-bit",
+            "Waiting for barcode...",
+            "Scanning inventory pool",
+            "Near-field audit active"
+        ];
+
+        let i = 0;
+        let j = 0;
+        let currentPhrase = "";
+        let isDeleting = false;
+        const typerEl = document.getElementById('typerText');
+
+        function type() {
+            currentPhrase = phrases[i];
+            
+            if (isDeleting) {
+                typerEl.textContent = currentPhrase.substring(0, j - 1);
+                j--;
+            } else {
+                typerEl.textContent = currentPhrase.substring(0, j + 1);
+                j++;
+            }
+
+            let typeSpeed = isDeleting ? 50 : 100;
+
+            if (!isDeleting && j === currentPhrase.length) {
+                typeSpeed = 2000; // Diam sebentar setelah selesai ngetik
+                isDeleting = true;
+            } else if (isDeleting && j === 0) {
+                isDeleting = false;
+                i = (i + 1) % phrases.length;
+                typeSpeed = 500;
+            }
+
+            setTimeout(type, typeSpeed);
         }
+
+        function openPage(url, btn) {
+            const frame = document.getElementById('mainFrame');
+            frame.style.opacity = '0';
+            setTimeout(() => {
+                frame.src = url;
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                frame.onload = () => frame.style.opacity = '1';
+            }, 200);
+        }
+
+        // Jalankan Typer saat load
+        window.onload = () => {
+            type();
+        };
     </script>
 </body>
 </html>
