@@ -3,205 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit Live - Toast Edition</title>
+    <title>Audit Live - Impact Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         
-        /* Animasi "DEG" untuk Baris Tabel */
-        @keyframes degPop {
-            0% { transform: scale(0.95); background-color: rgba(16, 185, 129, 0.2); }
-            50% { transform: scale(1.01); background-color: rgba(16, 185, 129, 0.05); }
-            100% { transform: scale(1); background-color: white; }
+        /* Toast Center */
+        #toastContainer {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            pointer-events: none;
+            width: 100%;
         }
-        .new-row { animation: degPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; border-left: 4px solid #10b981 !important; }
 
-        /* Animasi Toast "DEG" */
-        @keyframes toastIn {
-            0% { transform: translateY(100%) scale(0.5); opacity: 0; }
-            50% { transform: translateY(-10px) scale(1.1); }
+        @keyframes elegantSlideUp {
+            0% { transform: translateY(30px) scale(0.9); opacity: 0; }
             100% { transform: translateY(0) scale(1); opacity: 1; }
         }
-        .toast-deg { animation: toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-        .scan-focus:focus { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+        .toast-elegant { 
+            animation: elegantSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; 
+            pointer-events: auto;
+            min-width: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- ANIMASI DEG PADA TABEL --- */
+        @keyframes degImpact {
+            0% { transform: scale(0.95); background-color: rgba(6, 182, 212, 0.3); }
+            40% { transform: scale(1.02); background-color: rgba(6, 182, 212, 0.1); }
+            100% { transform: scale(1); background-color: white; }
+        }
+        .new-row-deg { 
+            animation: degImpact 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            border-left: 6px solid #0891b2 !important;
+        }
+
+        .excel-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+        .excel-table th { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 14px; text-align: left; color: #475569; text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+        .excel-table td { border: 1px solid #e2e8f0; padding: 12px 16px; background: white; transition: background 0.2s; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .sticky-header { position: sticky; top: 0; z-index: 20; background: white; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-4 flex justify-between items-end">
+    <div class="max-w-6xl mx-auto">
+        <div id="toastContainer"></div>
+
+        <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
             <div>
-                <h1 class="text-xl font-black text-slate-800 tracking-tight underline decoration-green-500 decoration-4">AUDIT LIVE</h1>
-                <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 mt-1">Realtime Inventory Sync</p>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tighter uppercase">
+                    <i class="fa-solid fa-bolt-lightning text-cyan-500 mr-2"></i>Audit <span class="text-cyan-600">Impact</span>
+                </h1>
+                <p id="statusInfo" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">
+                    <i class="fa-solid fa-sync fa-spin mr-1"></i>Syncing...
+                </p>
             </div>
             <div class="text-right">
-                <span id="counter" class="text-4xl font-black text-slate-800 leading-none">0</span>
-                <p class="text-[9px] font-black text-blue-500 uppercase">Total Terdata</p>
+                <span id="counter" class="text-5xl font-black text-slate-800 tabular-nums">0</span>
+                <p class="text-[10px] font-black text-cyan-600 uppercase mt-1">Items Scanned</p>
             </div>
         </header>
 
-        <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 mb-6 transition-all">
-            <input type="text" id="scanInput" 
-                   class="w-full p-3 text-xl font-mono text-center border-2 border-slate-100 rounded-xl scan-focus outline-none uppercase transition-all placeholder:text-slate-200" 
-                   placeholder="SIAP SCAN..." autofocus autocomplete="off">
+        <div class="relative mb-8 group">
+            <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                <i class="fa-solid fa-magnifying-glass text-cyan-500 text-xl transition-transform group-focus-within:scale-125"></i>
+            </div>
+            <input type="text" id="scanInput" autocomplete="off" disabled
+                class="w-full pl-16 pr-6 py-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm focus:border-cyan-500 focus:ring-8 focus:ring-cyan-500/5 outline-none font-mono text-xl transition-all disabled:opacity-50" 
+                placeholder="DOWNLOADING MASTER DATA...">
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="overflow-y-auto max-h-[65vh]">
-                <table class="w-full text-left">
-                    <tbody id="auditLog" class="divide-y divide-slate-50">
-                        <tr id="initialPlaceholder"><td class="p-20 text-center text-slate-300 italic text-xs uppercase tracking-widest font-bold">Menunggu Pemindaian...</td></tr>
+        <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="overflow-y-auto max-h-[60vh]">
+                <table class="excel-table">
+                    <thead class="sticky-header">
+                        <tr>
+                            <th width="150"><i class="fa-solid fa-hashtag mr-2 text-cyan-500"></i>Rak</th>
+                            <th><i class="fa-solid fa-book mr-2 text-cyan-500"></i>Judul Buku</th>
+                            <th width="220"><i class="fa-solid fa-user mr-2 text-cyan-500"></i>Penulis</th>
+                            <th width="180"><i class="fa-solid fa-barcode mr-2 text-cyan-500"></i>Barcode</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTable">
+                        <tr id="initialMsg">
+                            <td colspan="4" class="p-24 text-center text-slate-300 italic font-bold uppercase tracking-widest">
+                                Siap melakukan audit
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div id="toastContainer" class="fixed bottom-6 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none z-50"></div>
-
     <script>
         const SB_URL = 'https://heosadzwckwmbjhxydtm.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
         const client = supabase.createClient(SB_URL, SB_KEY);
 
-        const scanInput = document.getElementById('scanInput');
-        const auditLog = document.getElementById('auditLog');
-        const counter = document.getElementById('counter');
-        const toastContainer = document.getElementById('toastContainer');
+        let masterData = new Map();
+        let scannedLogs = [];
 
-        let typingTimer;
-
-        async function processBarcode(barcode) {
-            if (!barcode) return;
-
-            const { data: duplicate } = await client.from('log_audit').select('id').eq('kode_barcode', barcode).maybeSingle();
-            if (duplicate) {
-                showToast("⚠️ DUPLIKAT: SUDAH TERCATAT", "bg-orange-500");
-                playTone(150, 400);
-                return;
-            }
-
-            const { data: buku } = await client.from('ekslempar').select('*, biblio(judul)').eq('kode', barcode).maybeSingle();
-
-            if (buku) {
-                const payload = {
-                    kode_barcode: barcode,
-                    judul_buku: buku.biblio ? buku.biblio.judul : 'Unknown',
-                    lokasi_rak: buku.lokasi_rak || '-'
-                };
-
-                const { data: saved } = await client.from('log_audit').insert([payload]).select();
-                if (saved) {
-                    showToast("✅ BERHASIL DICATAT", "bg-green-600");
-                    renderLogRow(saved[0], true);
-                    updateCounter();
-                }
-            } else {
-                showToast("❌ BARCODE TIDAK ADA!", "bg-red-600");
-                playTone(100, 600);
-            }
-        }
-
-        function showToast(msg, bgColor) {
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `${bgColor} text-white px-6 py-3 rounded-full shadow-2xl font-black text-xs tracking-widest toast-deg flex items-center gap-3`;
-            toast.innerHTML = `<span>${msg}</span>`;
-            
-            toastContainer.appendChild(toast);
-            
-            // Hapus toast setelah 2 detik
+            const styles = {
+                success: { bg: 'bg-cyan-500/90', icon: 'fa-check-double' },
+                error: { bg: 'bg-rose-500/90', icon: 'fa-circle-exclamation' },
+                warning: { bg: 'bg-amber-500/90', icon: 'fa-triangle-exclamation' },
+                info: { bg: 'bg-slate-800/90', icon: 'fa-download' }
+            };
+            toast.className = `${styles[type].bg} backdrop-blur-md text-white px-10 py-4 rounded-full shadow-2xl flex items-center gap-4 toast-elegant border border-white/20`;
+            toast.innerHTML = `<i class="fa-solid ${styles[type].icon} text-xl"></i><div class="font-bold text-[11px] uppercase tracking-widest whitespace-nowrap">${msg}</div>`;
+            container.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(20px)';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 2000);
+                setTimeout(() => toast.remove(), 500);
+            }, 2500);
         }
 
-        function renderLogRow(log, isNew = false) {
-            const ph = document.getElementById('initialPlaceholder');
-            if (ph) ph.remove();
-            if (document.getElementById(`row-${log.id}`)) return;
-
-            const tr = document.createElement('tr');
-            tr.id = `row-${log.id}`;
-            tr.className = isNew ? 'new-row' : 'bg-white';
+        async function initApp() {
+            showToast("Mendownload Data Master...", "info");
+            const { data, error } = await client.from('ekslempar').select('kode, lokasi_rak, biblio(judul, penulis)');
+            if (error) { showToast("Gagal memuat data!", "error"); return; }
             
-            tr.innerHTML = `
-                <td class="p-3">
-                    <div class="flex flex-col">
-                        <span class="font-bold text-slate-800 text-sm leading-tight">${log.judul_buku}</span>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[9px] font-mono bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">${log.kode_barcode}</span>
-                            <span class="text-[9px] font-black text-blue-500 uppercase tracking-tighter">RAK: ${log.lokasi_rak}</span>
-                        </div>
-                    </div>
-                </td>
-            `;
-            auditLog.insertBefore(tr, auditLog.firstChild);
+            data.forEach(b => masterData.set(b.kode, {
+                judul: b.biblio?.judul || 'No Title',
+                penulis: b.biblio?.penulis || '-',
+                rak: b.lokasi_rak || '-'
+            }));
+
+            const { data: logs } = await client.from('log_audit').select('*').order('created_at', { ascending: false });
+            if (logs) { scannedLogs = logs; renderTable(); }
+
+            document.getElementById('scanInput').disabled = false;
+            document.getElementById('scanInput').placeholder = "SCAN BARCODE SEKARANG...";
+            document.getElementById('statusInfo').innerHTML = `<i class="fa-solid fa-circle text-[8px] text-cyan-500 mr-2 animate-pulse"></i>ONLINE: ${data.length} DATA`;
+            showToast("Sistem Siap!", "success");
         }
 
-        // Auto-Enter Logic
-        scanInput.addEventListener('input', () => {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => {
-                if (scanInput.value.trim().length > 3) {
-                    const val = scanInput.value.trim().toUpperCase();
-                    scanInput.value = '';
-                    processBarcode(val);
-                }
-            }, 300);
-        });
+        function renderTable() {
+            const tbody = document.getElementById('auditTable');
+            const counter = document.getElementById('counter');
+            if (scannedLogs.length === 0) return;
+            document.getElementById('initialMsg')?.remove();
 
-        scanInput.addEventListener('keydown', (e) => {
+            tbody.innerHTML = scannedLogs.map((log, index) => `
+                <tr id="row-${log.id}" class="${index === 0 ? 'new-row-deg' : ''}">
+                    <td class="font-bold text-cyan-700 font-mono text-sm tracking-tighter">${log.lokasi_rak || '-'}</td>
+                    <td class="font-bold text-slate-700 uppercase text-[11px]">${log.judul_buku}</td>
+                    <td class="text-slate-500 font-medium">${log.penulis || '-'}</td>
+                    <td class="font-mono text-[11px] text-slate-400 font-bold">${log.kode_barcode}</td>
+                </tr>
+            `).join('');
+            counter.innerText = scannedLogs.length;
+        }
+
+        document.getElementById('scanInput').addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
-                clearTimeout(typingTimer);
-                const val = scanInput.value.trim().toUpperCase();
-                scanInput.value = '';
-                processBarcode(val);
+                const barcode = e.target.value.trim().toUpperCase();
+                e.target.value = '';
+                if (!barcode) return;
+
+                const dataBuku = masterData.get(barcode);
+                if (dataBuku) {
+                    if (scannedLogs.some(l => l.kode_barcode === barcode)) {
+                        showToast("DUPLIKAT: SUDAH ADA!", "warning");
+                        return;
+                    }
+                    const payload = {
+                        kode_barcode: barcode,
+                        judul_buku: dataBuku.judul,
+                        penulis: dataBuku.penulis,
+                        lokasi_rak: dataBuku.rak
+                    };
+                    const { error } = await client.from('log_audit').insert([payload]);
+                    if (error) showToast("Error Simpan Database", "error");
+                    else showToast("BERHASIL!");
+                } else {
+                    showToast("BARCODE TIDAK ADA!", "error");
+                }
             }
         });
 
-        async function updateCounter() {
-            const { count } = await client.from('log_audit').select('*', { count: 'exact', head: true });
-            counter.innerText = count || 0;
-            counter.classList.add('scale-125', 'text-green-600');
-            setTimeout(() => counter.classList.remove('scale-125', 'text-green-600'), 200);
-        }
+        // Realtime Sync
+        client.channel('audit-impact')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'log_audit' }, payload => {
+                if (!scannedLogs.some(x => x.id === payload.new.id)) {
+                    scannedLogs.unshift(payload.new);
+                    renderTable();
+                }
+            }).subscribe();
 
-        function playTone(freq, dur) {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const o = ctx.createOscillator();
-                const g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.frequency.value = freq; o.start();
-                g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + dur/1000);
-                o.stop(ctx.currentTime + dur/1000);
-            } catch(e){}
-        }
-
-        // Database Realtime Listener
-        client.channel('audit-live').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'log_audit' }, p => {
-            renderLogRow(p.new, true);
-            updateCounter();
-        }).subscribe();
-
-        document.addEventListener('click', () => scanInput.focus());
-        window.onload = () => { updateCounter(); loadExisting(); };
-
-        async function loadExisting() {
-            const { data } = await client.from('log_audit').select('*').order('created_at', { ascending: true });
-            if (data) data.forEach(d => renderLogRow(d));
-        }
+        document.addEventListener('click', () => document.getElementById('scanInput').focus());
+        window.onload = initApp;
     </script>
 </body>
 </html>
