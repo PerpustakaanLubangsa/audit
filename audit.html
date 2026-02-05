@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit Live - Impact Edition</title>
+    <title>Audit Live - Auto Dynamic</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -11,19 +11,10 @@
     <style>
         body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         
-        /* Toast Center */
         #toastContainer {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            pointer-events: none;
-            width: 100%;
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 12px;
+            pointer-events: none; width: 100%;
         }
 
         @keyframes elegantSlideUp {
@@ -33,14 +24,9 @@
 
         .toast-elegant { 
             animation: elegantSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; 
-            pointer-events: auto;
-            min-width: 280px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            pointer-events: auto; min-width: 280px;
         }
 
-        /* --- ANIMASI DEG PADA TABEL --- */
         @keyframes degImpact {
             0% { transform: scale(0.95); background-color: rgba(6, 182, 212, 0.3); }
             40% { transform: scale(1.02); background-color: rgba(6, 182, 212, 0.1); }
@@ -53,9 +39,18 @@
 
         .excel-table { border-collapse: collapse; width: 100%; font-size: 13px; }
         .excel-table th { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 14px; text-align: left; color: #475569; text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
-        .excel-table td { border: 1px solid #e2e8f0; padding: 12px 16px; background: white; transition: background 0.2s; }
+        .excel-table td { border: 1px solid #e2e8f0; padding: 12px 16px; background: white; }
         
         .sticky-header { position: sticky; top: 0; z-index: 20; background: white; }
+
+        /* Shake effect for success */
+        .vibrate-success { animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -66,25 +61,25 @@
         <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
             <div>
                 <h1 class="text-2xl font-extrabold text-slate-800 tracking-tighter uppercase">
-                    <i class="fa-solid fa-bolt-lightning text-cyan-500 mr-2"></i>Audit <span class="text-cyan-600">Impact</span>
+                    <i class="fa-solid fa-bolt-lightning text-cyan-500 mr-2"></i>Audit <span class="text-cyan-600">Smart-Input</span>
                 </h1>
                 <p id="statusInfo" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">
-                    <i class="fa-solid fa-sync fa-spin mr-1"></i>Syncing...
+                    <i class="fa-solid fa-keyboard mr-1 text-cyan-500"></i> Auto-Detect Active
                 </p>
             </div>
             <div class="text-right">
                 <span id="counter" class="text-5xl font-black text-slate-800 tabular-nums">0</span>
-                <p class="text-[10px] font-black text-cyan-600 uppercase mt-1">Items Scanned</p>
+                <p class="text-[10px] font-black text-cyan-600 uppercase mt-1">Total Terabsen</p>
             </div>
         </header>
 
-        <div class="relative mb-8 group">
+        <div class="relative mb-8 group" id="inputWrapper">
             <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-                <i class="fa-solid fa-magnifying-glass text-cyan-500 text-xl transition-transform group-focus-within:scale-125"></i>
+                <i class="fa-solid fa-barcode text-cyan-500 text-xl group-focus-within:scale-125 transition-transform"></i>
             </div>
-            <input type="text" id="scanInput" autocomplete="off" disabled
-                class="w-full pl-16 pr-6 py-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm focus:border-cyan-500 focus:ring-8 focus:ring-cyan-500/5 outline-none font-mono text-xl transition-all disabled:opacity-50" 
-                placeholder="DOWNLOADING MASTER DATA...">
+            <input type="text" id="scanInput" autocomplete="off"
+                class="w-full pl-16 pr-6 py-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm focus:border-cyan-500 focus:ring-8 focus:ring-cyan-500/5 outline-none font-mono text-xl transition-all" 
+                placeholder="SCAN ATAU KETIK MANUAL...">
         </div>
 
         <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
@@ -92,16 +87,16 @@
                 <table class="excel-table">
                     <thead class="sticky-header">
                         <tr>
-                            <th width="150"><i class="fa-solid fa-hashtag mr-2 text-cyan-500"></i>Rak</th>
-                            <th><i class="fa-solid fa-book mr-2 text-cyan-500"></i>Judul Buku</th>
-                            <th width="220"><i class="fa-solid fa-user mr-2 text-cyan-500"></i>Penulis</th>
-                            <th width="180"><i class="fa-solid fa-barcode mr-2 text-cyan-500"></i>Barcode</th>
+                            <th width="120">Rak</th>
+                            <th>Judul Buku</th>
+                            <th width="200">Penulis</th>
+                            <th width="180">Barcode</th>
                         </tr>
                     </thead>
                     <tbody id="auditTable">
-                        <tr id="initialMsg">
-                            <td colspan="4" class="p-24 text-center text-slate-300 italic font-bold uppercase tracking-widest">
-                                Siap melakukan audit
+                        <tr id="loadingMsg">
+                            <td colspan="4" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">
+                                Menghubungkan Stream...
                             </td>
                         </tr>
                     </tbody>
@@ -115,102 +110,124 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
         const client = supabase.createClient(SB_URL, SB_KEY);
 
-        let masterData = new Map();
         let scannedLogs = [];
+        let typingTimer;
+        const doneTypingInterval = 300; // Jeda 0.3 detik (Auto-Enter)
 
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             const styles = {
-                success: { bg: 'bg-cyan-500/90', icon: 'fa-check-double' },
-                error: { bg: 'bg-rose-500/90', icon: 'fa-circle-exclamation' },
-                warning: { bg: 'bg-amber-500/90', icon: 'fa-triangle-exclamation' },
-                info: { bg: 'bg-slate-800/90', icon: 'fa-download' }
+                success: { bg: 'bg-cyan-600/90', icon: 'fa-check-double' },
+                error: { bg: 'bg-rose-600/90', icon: 'fa-triangle-exclamation' },
+                warning: { bg: 'bg-amber-500/90', icon: 'fa-circle-exclamation' }
             };
-            toast.className = `${styles[type].bg} backdrop-blur-md text-white px-10 py-4 rounded-full shadow-2xl flex items-center gap-4 toast-elegant border border-white/20`;
-            toast.innerHTML = `<i class="fa-solid ${styles[type].icon} text-xl"></i><div class="font-bold text-[11px] uppercase tracking-widest whitespace-nowrap">${msg}</div>`;
+            toast.className = `${styles[type].bg} backdrop-blur-md text-white px-8 py-3 rounded-full shadow-2xl flex items-center gap-4 toast-elegant border border-white/10`;
+            toast.innerHTML = `<i class="fa-solid ${styles[type].icon}"></i><div class="font-bold text-[10px] uppercase tracking-[2px] whitespace-nowrap">${msg}</div>`;
             container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 500);
-            }, 2500);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 2500);
         }
 
-        async function initApp() {
-            showToast("Mendownload Data Master...", "info");
-            const { data, error } = await client.from('ekslempar').select('kode, lokasi_rak, biblio(judul, penulis)');
-            if (error) { showToast("Gagal memuat data!", "error"); return; }
+        // Fungsi Getar & Animasi Sukses
+        function triggerHaptic() {
+            // Getar Fisik (HP)
+            if ("vibrate" in navigator) navigator.vibrate([50, 30, 50]);
             
-            data.forEach(b => masterData.set(b.kode, {
-                judul: b.biblio?.judul || 'No Title',
-                penulis: b.biblio?.penulis || '-',
-                rak: b.lokasi_rak || '-'
-            }));
-
-            const { data: logs } = await client.from('log_audit').select('*').order('created_at', { ascending: false });
-            if (logs) { scannedLogs = logs; renderTable(); }
-
-            document.getElementById('scanInput').disabled = false;
-            document.getElementById('scanInput').placeholder = "SCAN BARCODE SEKARANG...";
-            document.getElementById('statusInfo').innerHTML = `<i class="fa-solid fa-circle text-[8px] text-cyan-500 mr-2 animate-pulse"></i>ONLINE: ${data.length} DATA`;
-            showToast("Sistem Siap!", "success");
+            // Getar Visual (Komputer)
+            const wrapper = document.getElementById('inputWrapper');
+            wrapper.classList.add('vibrate-success');
+            setTimeout(() => wrapper.classList.remove('vibrate-success'), 300);
         }
 
-        function renderTable() {
+        async function processBarcode() {
+            const inputEl = document.getElementById('scanInput');
+            const barcode = inputEl.value.trim().toUpperCase();
+            
+            if (!barcode || barcode.length < 3) return; // Mencegah proses jika input terlalu pendek
+            
+            inputEl.value = ''; // Reset input secepat mungkin
+            clearTimeout(typingTimer);
+
+            if (scannedLogs.some(l => l.kode_barcode === barcode)) {
+                showToast("DUPLIKAT!", "warning");
+                return;
+            }
+
+            const { data: buku, error: searchError } = await client
+                .from('ekslempar')
+                .select('kode, lokasi_rak, biblio(judul, penulis)')
+                .eq('kode', barcode)
+                .single();
+
+            if (searchError || !buku) {
+                showToast("TIDAK DITEMUKAN!", "error");
+                return;
+            }
+
+            const { error: insertError } = await client.from('log_audit').insert([{
+                kode_barcode: barcode,
+                judul_buku: buku.biblio?.judul || 'No Title',
+                penulis: buku.biblio?.penulis || '-',
+                lokasi_rak: buku.lokasi_rak || '-'
+            }]);
+
+            if (!insertError) {
+                triggerHaptic();
+                showToast("BERHASIL!");
+            } else {
+                showToast("ERROR DATABASE", "error");
+            }
+        }
+
+        // Event Listeners
+        const inputField = document.getElementById('scanInput');
+
+        inputField.addEventListener('keyup', (e) => {
+            clearTimeout(typingTimer);
+            if (e.key === 'Enter') {
+                processBarcode();
+            } else {
+                // Jalankan timer untuk auto-submit (jika scanner tidak kirim enter)
+                typingTimer = setTimeout(processBarcode, doneTypingInterval);
+            }
+        });
+
+        inputField.addEventListener('keydown', () => {
+            clearTimeout(typingTimer);
+        });
+
+        // Realtime Render
+        function renderTable(isNewEntry = false) {
             const tbody = document.getElementById('auditTable');
             const counter = document.getElementById('counter');
-            if (scannedLogs.length === 0) return;
-            document.getElementById('initialMsg')?.remove();
+            if (scannedLogs.length > 0) document.getElementById('loadingMsg')?.remove();
 
             tbody.innerHTML = scannedLogs.map((log, index) => `
-                <tr id="row-${log.id}" class="${index === 0 ? 'new-row-deg' : ''}">
-                    <td class="font-bold text-cyan-700 font-mono text-sm tracking-tighter">${log.lokasi_rak || '-'}</td>
-                    <td class="font-bold text-slate-700 uppercase text-[11px]">${log.judul_buku}</td>
-                    <td class="text-slate-500 font-medium">${log.penulis || '-'}</td>
-                    <td class="font-mono text-[11px] text-slate-400 font-bold">${log.kode_barcode}</td>
+                <tr id="row-${log.id}" class="${(isNewEntry && index === 0) ? 'new-row-deg' : ''}">
+                    <td class="font-bold text-cyan-700 font-mono text-xs tracking-tighter">${log.lokasi_rak || '-'}</td>
+                    <td class="font-bold text-slate-700 uppercase text-[11px] leading-tight">${log.judul_buku}</td>
+                    <td class="text-slate-500 font-medium text-[11px]">${log.penulis || '-'}</td>
+                    <td class="font-mono text-[10px] text-slate-400 font-bold">${log.kode_barcode}</td>
                 </tr>
             `).join('');
             counter.innerText = scannedLogs.length;
         }
 
-        document.getElementById('scanInput').addEventListener('keydown', async (e) => {
-            if (e.key === 'Enter') {
-                const barcode = e.target.value.trim().toUpperCase();
-                e.target.value = '';
-                if (!barcode) return;
-
-                const dataBuku = masterData.get(barcode);
-                if (dataBuku) {
-                    if (scannedLogs.some(l => l.kode_barcode === barcode)) {
-                        showToast("DUPLIKAT: SUDAH ADA!", "warning");
-                        return;
-                    }
-                    const payload = {
-                        kode_barcode: barcode,
-                        judul_buku: dataBuku.judul,
-                        penulis: dataBuku.penulis,
-                        lokasi_rak: dataBuku.rak
-                    };
-                    const { error } = await client.from('log_audit').insert([payload]);
-                    if (error) showToast("Error Simpan Database", "error");
-                    else showToast("BERHASIL!");
-                } else {
-                    showToast("BARCODE TIDAK ADA!", "error");
-                }
-            }
-        });
-
-        // Realtime Sync
-        client.channel('audit-impact')
+        client.channel('public:log_audit')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'log_audit' }, payload => {
                 if (!scannedLogs.some(x => x.id === payload.new.id)) {
                     scannedLogs.unshift(payload.new);
-                    renderTable();
+                    renderTable(true);
                 }
             }).subscribe();
 
-        document.addEventListener('click', () => document.getElementById('scanInput').focus());
-        window.onload = initApp;
+        async function loadInitial() {
+            const { data } = await client.from('log_audit').select('*').order('created_at', { ascending: false }).limit(50);
+            if (data) { scannedLogs = data; renderTable(false); }
+        }
+
+        document.addEventListener('click', () => inputField.focus());
+        window.onload = loadInitial;
     </script>
 </body>
 </html>
