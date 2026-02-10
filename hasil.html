@@ -1,186 +1,169 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekap Audit Terurut</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        #toastContainer {
-            position: fixed;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            pointer-events: none;
-            width: 100%;
-        }
-
-        @keyframes elegantPop {
-            0% { transform: translateY(30px) scale(0.9); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-
-        .toast-elegant { animation: elegantPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; pointer-events: auto; }
-
-        .audit-table { border-collapse: collapse; width: 100%; font-size: 12px; background: white; }
-        .audit-table th { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; text-align: left; color: #64748b; text-transform: uppercase; font-size: 9px; font-weight: 800; letter-spacing: 1px; }
-        .audit-table td { border: 1px solid #e2e8f0; padding: 10px 14px; }
-
-        /* Row Status */
-        .row-found { background-color: #ffffff; }
-        .row-found .status-badge { background: #06b6d4; color: white; }
-        
-        /* Row Pucat & Pindah ke bawah */
-        .row-missing { opacity: 0.3; filter: grayscale(100%); background-color: #fcfdfe; }
-        .row-missing .status-badge { background: #e2e8f0; color: #94a3b8; }
-
-        .shelf-header { background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); padding: 1.25rem 1.5rem; }
-
-        @keyframes degIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
-        .shelf-card { animation: degIn 0.5s ease-out forwards; page-break-inside: avoid; }
-
-        @media print { .no-print { display: none; } body { padding: 0; background: white; } .shelf-card { border: none; box-shadow: none; margin-bottom: 2rem; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekap Audit Terurut - Optimized</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body { background-color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
+#toastContainer { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; width: 100%; }
+@keyframes elegantPop { 0% { transform: translateY(30px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+.toast-elegant { animation: elegantPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; pointer-events: auto; }
+.audit-table { border-collapse: collapse; width: 100%; font-size: 12px; background: white; table-layout: fixed; }
+.audit-table th { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; text-align: left; color: #64748b; text-transform: uppercase; font-size: 9px; font-weight: 800; letter-spacing: 1px; }
+.audit-table td { border: 1px solid #e2e8f0; padding: 10px 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-found { background-color: #ffffff; }
+.row-found .status-badge { background: #06b6d4; color: white; }
+.row-missing { opacity: 0.3; filter: grayscale(100%); background-color: #fcfdfe; }
+.row-missing .status-badge { background: #e2e8f0; color: #94a3b8; }
+.shelf-header { background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); padding: 1.25rem 1.5rem; }
+.shelf-card { min-height: 200px; transition: all 0.3s ease; }
+.lazy-content { min-height: 100px; display: flex; align-items: center; justify-content: center; background: #f8fafc; color: #cbd5e1; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+@media print { .no-print { display: none; } body { padding: 0; background: white; } .shelf-card { border: none; box-shadow: none; margin-bottom: 2rem; opacity: 1 !important; filter: none !important; } .lazy-content { display: none; } }
+</style>
 </head>
 <body class="p-4 md:p-8">
-
-    <div class="max-w-6xl mx-auto">
-        <div id="toastContainer"></div>
-
-        <header class="mb-10 flex flex-col md:flex-row justify-between items-center gap-6 no-print text-center md:text-left">
-            <div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tighter uppercase">Rekap <span class="text-cyan-600 italic">Inventory</span></h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1"><i class="fa-solid fa-list-check mr-2 text-cyan-500"></i>Data Terurut: Absen Teratas</p>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="confirmReset()" class="bg-white border-2 border-rose-50 px-5 py-2 rounded-2xl text-[10px] font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm">RESET LOG</button>
-                <button onclick="window.print()" class="bg-white border-2 border-slate-200 px-5 py-2 rounded-2xl text-[10px] font-black text-slate-600 hover:border-cyan-500 hover:text-cyan-600 transition-all shadow-sm">CETAK</button>
-                <button onclick="loadReport()" class="bg-cyan-600 px-6 py-2.5 rounded-2xl text-[10px] font-black text-white hover:bg-cyan-700 shadow-xl shadow-cyan-100 transition-all">REFRESH</button>
-            </div>
-        </header>
-
-        <div id="reportContainer" class="space-y-12">
-            <div class="text-center p-20 text-slate-400 font-bold uppercase tracking-widest text-xs">Menyusun Data...</div>
-        </div>
-    </div>
-
-    <script>
-        const SB_URL = 'https://heosadzwckwmbjhxydtm.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
-        const client = supabase.createClient(SB_URL, SB_KEY);
-
-        function showToast(msg, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            const styles = { success: { bg: 'bg-cyan-500/90', icon: 'fa-check' }, error: { bg: 'bg-rose-500/90', icon: 'fa-xmark' } };
-            toast.className = `${styles[type]?.bg || 'bg-slate-800/90'} backdrop-blur-md text-white px-8 py-3 rounded-full shadow-2xl flex items-center gap-4 toast-elegant border border-white/20`;
-            toast.innerHTML = `<i class="fa-solid ${styles[type]?.icon || 'fa-info'} text-sm"></i><div class="font-bold text-[10px] uppercase tracking-widest">${msg}</div>`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 2500);
-        }
-
-        async function loadReport() {
-            const container = document.getElementById('reportContainer');
-            const { data: master } = await client.from('ekslempar').select('kode, lokasi_rak, biblio(judul, penulis)');
-            const { data: log } = await client.from('log_audit').select('kode_barcode');
-
-            if (!master) { container.innerHTML = 'Koneksi bermasalah.'; return; }
-
-            const scannedCodes = new Set(log.map(l => l.kode_barcode));
-            const grouped = master.reduce((acc, item) => {
-                const shelf = item.lokasi_rak || "TANPA LOKASI";
-                if (!acc[shelf]) acc[shelf] = [];
-                acc[shelf].push({
-                    judul: item.biblio?.judul || 'No Title',
-                    penulis: item.biblio?.penulis || '-',
-                    barcode: item.kode,
-                    found: scannedCodes.has(item.kode)
-                });
-                return acc;
-            }, {});
-
-            container.innerHTML = '';
-            const sortedShelves = Object.keys(grouped).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
-
-            sortedShelves.forEach(shelf => {
-                const items = grouped[shelf];
-                
-                // --- LOGIKA SORTING BARU: ADA DI ATAS, BELUM DI BAWAH ---
-                items.sort((a, b) => b.found - a.found);
-
-                const foundCount = items.filter(i => i.found).length;
-                const percent = Math.round((foundCount / items.length) * 100);
-
-                const html = `
-                    <div class="shelf-card bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200 overflow-hidden">
-                        <div class="shelf-header flex justify-between items-center">
-                            <div class="flex items-center gap-4">
-                                <div class="bg-white/20 p-3 rounded-2xl backdrop-blur-sm"><i class="fa-solid fa-warehouse text-white text-xl"></i></div>
-                                <div>
-                                    <h2 class="text-white font-black text-sm uppercase tracking-[0.3em]">RAK ${shelf}</h2>
-                                    <p class="text-[9px] text-cyan-100 font-bold uppercase tracking-widest opacity-80 italic">Audit Location</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-white font-mono text-lg font-black leading-none">${percent}%</div>
-                                <div class="text-[9px] text-cyan-100 font-bold uppercase mt-1 tracking-tighter">${foundCount} / ${items.length} Terabsen</div>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="audit-table">
-                                <thead>
-                                    <tr>
-                                        <th width="50" class="text-center">No</th>
-                                        <th>Judul Buku</th>
-                                        <th width="200">Pengarang</th>
-                                        <th width="150">Barcode</th>
-                                        <th width="100" class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${items.map((item, i) => `
-                                        <tr class="${item.found ? 'row-found' : 'row-missing'}">
-                                            <td class="text-center font-bold text-slate-300">${i+1}</td>
-                                            <td class="font-bold text-slate-700 uppercase leading-tight">${item.judul}</td>
-                                            <td class="text-slate-500 font-medium italic">${item.penulis}</td>
-                                            <td class="font-mono text-[11px] font-bold ${item.found ? 'text-cyan-600' : 'text-slate-400'}">${item.barcode}</td>
-                                            <td class="text-center">
-                                                <span class="status-badge text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">
-                                                    ${item.found ? 'ADA' : 'BELUM'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', html);
-            });
-            showToast("Laporan Berhasil Disusun");
-        }
-
-        async function confirmReset() {
-            if (confirm("Reset log audit?")) {
-                if (prompt("Ketik 'HAPUS':") === "HAPUS") {
-                    await client.from('log_audit').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                    loadReport();
-                }
-            }
-        }
-
-        window.onload = loadReport;
-    </script>
+<div class="max-w-6xl mx-auto">
+<div id="toastContainer"></div>
+<header class="mb-10 flex flex-col md:flex-row justify-between items-center gap-6 no-print text-center md:text-left">
+<div>
+<h1 class="text-3xl font-black text-slate-800 tracking-tighter uppercase">Rekap <span class="text-cyan-600 italic">Inventory</span></h1>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1"><i class="fa-solid fa-bolt mr-2 text-cyan-500"></i>Optimized: Virtual Rendering Active</p>
+</div>
+<div class="flex gap-3">
+<button onclick="confirmReset()" class="bg-white border-2 border-rose-50 px-5 py-2 rounded-2xl text-[10px] font-black text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm">RESET LOG</button>
+<button onclick="window.print()" class="bg-white border-2 border-slate-200 px-5 py-2 rounded-2xl text-[10px] font-black text-slate-600 hover:border-cyan-500 hover:text-cyan-600 transition-all shadow-sm">CETAK</button>
+<button onclick="loadReport()" class="bg-cyan-600 px-6 py-2.5 rounded-2xl text-[10px] font-black text-white hover:bg-cyan-700 shadow-xl shadow-cyan-100 transition-all">REFRESH</button>
+</div>
+</header>
+<div id="reportContainer" class="space-y-12">
+<div class="text-center p-20 text-slate-400 font-bold uppercase tracking-widest text-xs">Initializing Database...</div>
+</div>
+</div>
+<script>
+const SB_URL = 'https://heosadzwckwmbjhxydtm.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
+const client = supabase.createClient(SB_URL, SB_KEY);
+let masterData = [];
+let logData = new Set();
+let groupedData = {};
+function showToast(msg, type = 'success') {
+const container = document.getElementById('toastContainer');
+const toast = document.createElement('div');
+const styles = { success: { bg: 'bg-cyan-500/90', icon: 'fa-check' }, error: { bg: 'bg-rose-500/90', icon: 'fa-xmark' } };
+toast.className = `${styles[type]?.bg || 'bg-slate-800/90'} backdrop-blur-md text-white px-8 py-3 rounded-full shadow-2xl flex items-center gap-4 toast-elegant border border-white/20`;
+toast.innerHTML = `<i class="fa-solid ${styles[type]?.icon || 'fa-info'} text-sm"></i><div class="font-bold text-[10px] uppercase tracking-widest">${msg}</div>`;
+container.appendChild(toast);
+setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 2500);
+}
+async function loadReport() {
+const container = document.getElementById('reportContainer');
+container.innerHTML = '<div class="text-center p-20 text-slate-400 font-bold uppercase tracking-widest text-xs">Fetching Data...</div>';
+const { data: master, error: e1 } = await client.from('ekslempar').select('kode, lokasi_rak, biblio(judul, penulis)');
+const { data: log, error: e2 } = await client.from('log_audit').select('kode_barcode');
+if (e1 || e2) { showToast("Gagal mengambil data", "error"); return; }
+logData = new Set(log.map(l => l.kode_barcode));
+groupedData = master.reduce((acc, item) => {
+const shelf = item.lokasi_rak || "TANPA LOKASI";
+if (!acc[shelf]) acc[shelf] = [];
+acc[shelf].push({
+judul: item.biblio?.judul || 'No Title',
+penulis: item.biblio?.penulis || '-',
+barcode: item.kode,
+found: logData.has(item.kode)
+});
+return acc;
+}, {});
+container.innerHTML = '';
+const sortedShelves = Object.keys(groupedData).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+sortedShelves.forEach(shelf => {
+const items = groupedData[shelf];
+items.sort((a, b) => b.found - a.found);
+const foundCount = items.filter(i => i.found).length;
+const percent = Math.round((foundCount / items.length) * 100);
+const shelfDiv = document.createElement('div');
+shelfDiv.className = 'shelf-card bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200 overflow-hidden';
+shelfDiv.setAttribute('data-shelf', shelf);
+shelfDiv.innerHTML = `
+<div class="shelf-header flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="bg-white/20 p-3 rounded-2xl backdrop-blur-sm"><i class="fa-solid fa-warehouse text-white text-xl"></i></div>
+<div>
+<h2 class="text-white font-black text-sm uppercase tracking-[0.3em]">RAK ${shelf}</h2>
+<p class="text-[9px] text-cyan-100 font-bold uppercase tracking-widest opacity-80 italic">Audit Location</p>
+</div>
+</div>
+<div class="text-right">
+<div class="text-white font-mono text-lg font-black leading-none">${percent}%</div>
+<div class="text-[9px] text-cyan-100 font-bold uppercase mt-1 tracking-tighter">${foundCount} / ${items.length} Items</div>
+</div>
+</div>
+<div class="table-container overflow-x-auto min-h-[100px]">
+<div class="lazy-content">Menunggu Scroll...</div>
+</div>
+`;
+container.appendChild(shelfDiv);
+observer.observe(shelfDiv);
+});
+showToast("Optimized View Ready");
+}
+const observer = new IntersectionObserver((entries) => {
+entries.forEach(entry => {
+if (entry.isIntersecting) {
+const shelfCard = entry.target;
+const shelfName = shelfCard.getAttribute('data-shelf');
+const container = shelfCard.querySelector('.table-container');
+if (container.querySelector('.lazy-content')) {
+renderShelfTable(container, shelfName);
+}
+}
+});
+}, { rootMargin: '200px' });
+function renderShelfTable(container, shelfName) {
+const items = groupedData[shelfName];
+const tableHTML = `
+<table class="audit-table">
+<thead>
+<tr>
+<th width="50" class="text-center">No</th>
+<th>Judul Buku</th>
+<th width="200">Pengarang</th>
+<th width="150">Barcode</th>
+<th width="80" class="text-center">Status</th>
+</tr>
+</thead>
+<tbody>
+${items.map((item, i) => `
+<tr class="${item.found ? 'row-found' : 'row-missing'}">
+<td class="text-center font-bold text-slate-300">${i+1}</td>
+<td class="font-bold text-slate-700 uppercase leading-tight truncate" title="${item.judul}">${item.judul}</td>
+<td class="text-slate-500 font-medium italic truncate">${item.penulis}</td>
+<td class="font-mono text-[11px] font-bold ${item.found ? 'text-cyan-600' : 'text-slate-400'}">${item.barcode}</td>
+<td class="text-center">
+<span class="status-badge text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-tighter">
+${item.found ? 'ADA' : 'BELUM'}
+</span>
+</td>
+</tr>
+`).join('')}
+</tbody>
+</table>
+`;
+container.innerHTML = tableHTML;
+}
+async function confirmReset() {
+if (confirm("Reset log audit?")) {
+if (prompt("Ketik 'HAPUS':") === "HAPUS") {
+await client.from('log_audit').delete().neq('id', 0);
+loadReport();
+}
+}
+}
+window.onload = loadReport;
+</script>
 </body>
 </html>
