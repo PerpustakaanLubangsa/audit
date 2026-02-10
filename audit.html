@@ -10,37 +10,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
-#toastContainer {
-position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px;
-pointer-events: none; width: 100%;
-}
-@keyframes elegantSlideUp {
-0% { transform: translateY(20px); opacity: 0; }
-100% { transform: translateY(0); opacity: 1; }
-}
-.toast-elegant { 
-animation: elegantSlideUp 0.3s ease-out forwards; 
-pointer-events: auto; min-width: 250px;
-}
-@keyframes degImpact {
-0% { transform: scale(0.98); background-color: rgba(6, 182, 212, 0.2); }
-100% { transform: scale(1); background-color: white; }
-}
-.new-row-deg { 
-animation: degImpact 0.4s ease-out forwards;
-border-left: 4px solid #0891b2 !important;
-}
+#toastContainer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; width: 100%; }
+@keyframes elegantSlideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+.toast-elegant { animation: elegantSlideUp 0.3s ease-out forwards; pointer-events: auto; min-width: 250px; }
+@keyframes degImpact { 0% { transform: scale(0.98); background-color: rgba(6, 182, 212, 0.2); } 100% { transform: scale(1); background-color: white; } }
+.new-row-deg { animation: degImpact 0.4s ease-out forwards; border-left: 4px solid #0891b2 !important; }
 .excel-table { border-collapse: collapse; width: 100%; font-size: 13px; table-layout: fixed; }
 .excel-table th { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 12px; text-align: left; color: #64748b; text-transform: uppercase; font-size: 10px; font-weight: 800; }
 .excel-table td { border: 1px solid #e2e8f0; padding: 10px 14px; background: white; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sticky-header { position: sticky; top: 0; z-index: 20; }
 .vibrate-success { animation: shake 0.2s ease-in-out; }
-@keyframes shake {
-0%, 100% { transform: translateX(0); }
-25% { transform: translateX(-4px); }
-75% { transform: translateX(4px); }
-}
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 </style>
 </head>
 <body class="p-4">
@@ -48,9 +28,7 @@ border-left: 4px solid #0891b2 !important;
 <div id="toastContainer"></div>
 <header class="flex justify-between items-center mb-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
 <div class="flex items-center gap-4">
-<div class="bg-cyan-600 p-2.5 rounded-xl shadow-lg shadow-cyan-100">
-<i class="fa-solid fa-bolt-lightning text-white text-sm"></i>
-</div>
+<div class="bg-cyan-600 p-2.5 rounded-xl shadow-lg shadow-cyan-100"><i class="fa-solid fa-bolt-lightning text-white text-sm"></i></div>
 <div>
 <h1 class="text-xl font-extrabold text-slate-800 tracking-tighter uppercase leading-none">Audit Impact</h1>
 <p id="statusInfo" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">Initializing...</p>
@@ -62,23 +40,17 @@ border-left: 4px solid #0891b2 !important;
 <span id="counter" class="text-3xl font-black text-slate-800 tabular-nums">0</span>
 <p class="text-[9px] font-black text-cyan-600 uppercase">My Items</p>
 </div>
-<button id="clearDataBtn" class="bg-rose-50 hover:bg-rose-100 text-rose-600 p-3 rounded-xl transition-colors border border-rose-100">
-<i class="fa-solid fa-trash-can"></i>
-</button>
+<button id="clearDataBtn" class="bg-rose-50 hover:bg-rose-100 text-rose-600 p-3 rounded-xl transition-colors border border-rose-100"><i class="fa-solid fa-trash-can"></i></button>
 </div>
 <div id="speedStats" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg flex gap-3">
-<span>YOU: <span id="mySpeed" class="text-cyan-600">0%</span></span>
-<span>OTHERS: <span id="otherSpeed" class="text-rose-500">0%</span></span>
+<span>YOU: <span id="mySpeed" class="text-cyan-600">0s/item</span></span>
+<span>OTHERS: <span id="otherSpeed" class="text-rose-500">0s/item</span></span>
 </div>
 </div>
 </header>
 <div class="relative mb-4" id="inputWrapper">
-<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-<i class="fa-solid fa-barcode text-cyan-600 text-lg"></i>
-</div>
-<input type="text" id="scanInput" autocomplete="off"
-class="w-full pl-14 pr-4 py-4 bg-white border-2 border-slate-200 rounded-xl shadow-sm focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 outline-none font-mono text-lg transition-all" 
-placeholder="Scan or type manual...">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none"><i class="fa-solid fa-barcode text-cyan-600 text-lg"></i></div>
+<input type="text" id="scanInput" autocomplete="off" class="w-full pl-14 pr-4 py-4 bg-white border-2 border-slate-200 rounded-xl shadow-sm focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 outline-none font-mono text-lg transition-all" placeholder="Scan or type manual...">
 </div>
 <div class="bg-white rounded-2xl shadow-xl border border-slate-200 flex-grow overflow-hidden flex flex-col">
 <div class="overflow-y-auto flex-grow" id="scrollArea">
@@ -93,9 +65,7 @@ placeholder="Scan or type manual...">
 </tr>
 </thead>
 <tbody id="auditTable">
-<tr id="emptyMsg">
-<td colspan="5" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">No scans yet</td>
-</tr>
+<tr id="emptyMsg"><td colspan="5" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">No scans yet</td></tr>
 </tbody>
 </table>
 </div>
@@ -108,16 +78,12 @@ const client = supabase.createClient(SB_URL, SB_KEY);
 const DEVICE_ID = localStorage.getItem('device_id') || 'dev_' + Math.random().toString(36).substr(2, 9);
 localStorage.setItem('device_id', DEVICE_ID);
 let scannedLogs = [];
+let allScannedBarcodes = new Set();
 let typingTimer;
-const doneTypingInterval = 350; 
 function showToast(msg, type = 'success') {
 const container = document.getElementById('toastContainer');
 const toast = document.createElement('div');
-const styles = {
-success: { bg: 'bg-cyan-600', icon: 'fa-check' },
-error: { bg: 'bg-rose-600', icon: 'fa-xmark' },
-warning: { bg: 'bg-amber-500', icon: 'fa-triangle-exclamation' }
-};
+const styles = { success: { bg: 'bg-cyan-600', icon: 'fa-check' }, error: { bg: 'bg-rose-600', icon: 'fa-xmark' }, warning: { bg: 'bg-amber-500', icon: 'fa-triangle-exclamation' } };
 toast.className = `${styles[type].bg} text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3 toast-elegant`;
 toast.innerHTML = `<i class="fa-solid ${styles[type].icon} text-xs"></i><span class="font-bold text-[10px] uppercase tracking-wider">${msg}</span>`;
 container.prepend(toast);
@@ -128,22 +94,30 @@ if ("vibrate" in navigator) navigator.vibrate(50);
 document.getElementById('inputWrapper').classList.add('vibrate-success');
 setTimeout(() => document.getElementById('inputWrapper').classList.remove('vibrate-success'), 200);
 }
+function calculatePace(dataArray) {
+if (dataArray.length < 2) return 0;
+const sorted = [...dataArray].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+const first = new Date(sorted[0].created_at);
+const last = new Date(sorted[sorted.length - 1].created_at);
+const diffSeconds = (last - first) / 1000;
+return diffSeconds > 0 ? (diffSeconds / (sorted.length - 1)).toFixed(1) : 0;
+}
 async function updateStats() {
-const { data, error } = await client.from('log_audit').select('device_id');
+const { data, error } = await client.from('log_audit').select('device_id, kode_barcode, created_at');
 if (error || !data) return;
-const total = data.length;
-if (total === 0) return;
-const myCount = data.filter(x => x.device_id === DEVICE_ID).length;
-const othersCount = total - myCount;
-document.getElementById('mySpeed').innerText = ((myCount / total) * 100).toFixed(1) + '%';
-document.getElementById('otherSpeed').innerText = ((othersCount / total) * 100).toFixed(1) + '%';
+allScannedBarcodes = new Set(data.map(i => i.kode_barcode));
+const myData = data.filter(x => x.device_id === DEVICE_ID);
+const otherData = data.filter(x => x.device_id !== DEVICE_ID);
+const myPace = calculatePace(myData);
+const otherPace = calculatePace(otherData);
+document.getElementById('mySpeed').innerText = myPace + 's/item';
+document.getElementById('otherSpeed').innerText = otherPace + 's/item';
+document.getElementById('counter').innerText = myData.length;
 }
 function renderTable(isNewEntry = false) {
 const tbody = document.getElementById('auditTable');
-const counterEl = document.getElementById('counter');
 if (scannedLogs.length === 0) {
 tbody.innerHTML = `<tr id="emptyMsg"><td colspan="5" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">No scans yet</td></tr>`;
-counterEl.innerText = '0';
 return;
 }
 const displayList = scannedLogs.slice(0, 10);
@@ -153,15 +127,9 @@ tbody.innerHTML = displayList.map((log, index) => `
 <td class="font-bold text-slate-700 uppercase text-[10px]">${log.judul_buku}</td>
 <td class="text-slate-500 text-[10px]">${log.penulis || '-'}</td>
 <td class="font-mono text-[10px] text-slate-400 font-bold">${log.kode_barcode}</td>
-<td class="text-center">
-<button onclick="deleteEntry(${log.id})" class="text-rose-400 hover:text-rose-600 transition-colors">
-<i class="fa-solid fa-trash-can text-xs"></i>
-</button>
-</td>
+<td class="text-center"><button onclick="deleteEntry('${log.id}', '${log.kode_barcode}')" class="text-rose-400 hover:text-rose-600 transition-colors"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
 </tr>
 `).join('');
-counterEl.innerText = scannedLogs.length;
-updateStats();
 }
 async function processBarcode() {
 const inputEl = document.getElementById('scanInput');
@@ -169,8 +137,9 @@ const barcode = inputEl.value.trim().toUpperCase();
 if (!barcode || barcode.length < 3) return;
 inputEl.value = '';
 clearTimeout(typingTimer);
-if (scannedLogs.some(l => l.kode_barcode === barcode)) {
-showToast("Duplicate Entry!", "warning");
+if (allScannedBarcodes.has(barcode)) {
+showToast("Already Audited!", "warning");
+triggerHaptic();
 return;
 }
 const { data: buku, error } = await client.from('ekslempar').select('kode, lokasi_rak, biblio(judul, penulis)').eq('kode', barcode).maybeSingle();
@@ -178,32 +147,29 @@ if (error || !buku) {
 showToast("Barcode not found!", "error");
 return;
 }
-const payload = {
-kode_barcode: barcode,
-judul_buku: buku.biblio?.judul || 'No Title',
-penulis: buku.biblio?.penulis || '-',
-lokasi_rak: buku.lokasi_rak || '-',
-device_id: DEVICE_ID
-};
+const payload = { kode_barcode: barcode, judul_buku: buku.biblio?.judul || 'No Title', penulis: buku.biblio?.penulis || '-', lokasi_rak: buku.lokasi_rak || '-', device_id: DEVICE_ID };
+allScannedBarcodes.add(barcode);
 const { data: insertedData, error: insertError } = await client.from('log_audit').insert([payload]).select().single();
 if (!insertError && insertedData) {
 scannedLogs.unshift(insertedData);
 renderTable(true);
 triggerHaptic();
 showToast("Audit Success!");
+updateStats();
 } else {
+allScannedBarcodes.delete(barcode);
 showToast("Save Failed!", "error");
 }
 }
-async function deleteEntry(id) {
+async function deleteEntry(id, barcode) {
 const { error } = await client.from('log_audit').delete().eq('id', id);
 if (!error) {
 scannedLogs = scannedLogs.filter(log => log.id !== id);
+allScannedBarcodes.delete(barcode);
 renderTable();
 showToast("Entry Deleted", "warning");
-} else {
-showToast("Delete Failed", "error");
-}
+updateStats();
+} else { showToast("Delete Failed", "error"); }
 }
 async function clearAllData() {
 if (confirm("Hapus seluruh data audit milik Anda?")) {
@@ -212,6 +178,7 @@ if (!error) {
 scannedLogs = [];
 renderTable();
 showToast("Your data cleared", "error");
+await updateStats();
 }
 }
 }
@@ -219,33 +186,20 @@ const inputField = document.getElementById('scanInput');
 inputField.addEventListener('keyup', (e) => {
 clearTimeout(typingTimer);
 if (e.key === 'Enter') processBarcode();
-else typingTimer = setTimeout(processBarcode, doneTypingInterval);
+else typingTimer = setTimeout(processBarcode, 350);
 });
 document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
-client.channel('audit-channel')
-.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'log_audit' }, payload => {
+client.channel('audit-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'log_audit' }, () => {
 updateStats();
-})
-.on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'log_audit' }, payload => {
-if (payload.old.device_id === DEVICE_ID || scannedLogs.some(x => x.id === payload.old.id)) {
-scannedLogs = scannedLogs.filter(x => x.id !== payload.old.id);
-renderTable();
-}
-updateStats();
-})
-.subscribe();
+}).subscribe();
 window.onload = async () => {
 inputField.focus();
-const { data } = await client.from('log_audit').select('*').eq('device_id', DEVICE_ID).order('created_at', { ascending: false });
-if (data) { scannedLogs = data; renderTable(); }
+const { data: initialLogs } = await client.from('log_audit').select('*').eq('device_id', DEVICE_ID).order('created_at', { ascending: false });
+if (initialLogs) { scannedLogs = initialLogs; renderTable(); }
+await updateStats();
 document.getElementById('statusInfo').innerHTML = '<span class="text-green-500">●</span> System Live';
-updateStats();
 };
-document.addEventListener('click', (e) => {
-if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !e.target.closest('button')) {
-inputField.focus();
-}
-});
+document.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !e.target.closest('button')) inputField.focus(); });
 </script>
 </body>
 </html>
