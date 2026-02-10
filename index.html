@@ -1,180 +1,132 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit Pro</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
-    
-    <style>
-        body, html { height: 100%; margin: 0; overflow: hidden; background: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        /* Header Statis (Bukan Floating) */
-        .main-header {
-            width: 100%;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(8, 145, 178, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2rem;
-            z-index: 1000;
-        }
-
-        /* Container Navigasi */
-        .nav-btn { 
-            display: flex;
-            align-items: center;
-            height: 42px;
-            padding: 0 14px;
-            border-radius: 14px;
-            color: #155e75;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-            white-space: nowrap;
-            max-width: 44px; /* Default menciut */
-            background: #f1f5f9;
-        }
-
-        .nav-btn span {
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.4s ease;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .nav-btn.active { 
-            max-width: 160px; /* Melebar */
-            background: #0891b2; 
-            color: white;
-        }
-
-        .nav-btn.active span { 
-            opacity: 1; 
-            transform: translateX(0); 
-            margin-left: 10px; 
-        }
-
-        /* Terminal Typer */
-        .typer-box {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: #0e7490;
-            text-transform: uppercase;
-            border-left: 2px solid #0891b2;
-            padding-left: 15px;
-            margin-left: 15px;
-            min-width: 220px;
-        }
-
-        .cursor { animation: blink 1s infinite; font-weight: bold; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* Status Kanan */
-        .code-tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: #0891b2;
-            font-weight: 700;
-            background: rgba(8, 145, 178, 0.05);
-            padding: 6px 14px;
-            border-radius: 10px;
-        }
-
-        /* Area Iframe - Dimulai tepat setelah header */
-        .content-area {
-            width: 100%;
-            height: calc(100vh - 70px); /* Total tinggi dikurangi tinggi header */
-            overflow: hidden;
-        }
-
-        iframe { 
-            width: 100%; 
-            height: 100%; 
-            border: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+:root { --cyan-main: #0891b2; --bg-main: #f1f5f9; }
+body, html { height: 100%; margin: 0; overflow: hidden; background: var(--bg-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.main-header {
+width: 100%;
+height: 60px;
+background: #fff;
+border-bottom: 1px solid rgba(0,0,0,0.05);
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 0 1.5rem;
+z-index: 100;
+}
+.nav-btn { 
+display: flex;
+align-items: center;
+height: 38px;
+padding: 0 12px;
+border-radius: 10px;
+color: #155e75;
+transition: all 0.2s ease;
+background: #f8fafc;
+border: 1px solid transparent;
+}
+.nav-btn span {
+font-size: 11px;
+font-weight: 700;
+text-transform: uppercase;
+display: none;
+margin-left: 8px;
+}
+.nav-btn.active { 
+background: var(--cyan-main); 
+color: white;
+}
+.nav-btn.active span { display: inline; }
+.typer-box {
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+font-size: 10px;
+color: #0e7490;
+text-transform: uppercase;
+border-left: 1px solid #ddd;
+padding-left: 12px;
+margin-left: 12px;
+}
+.cursor { animation: blink 0.8s infinite steps(1); }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.code-tag {
+font-family: monospace;
+font-size: 11px;
+color: var(--cyan-main);
+font-weight: 700;
+background: rgba(8, 145, 178, 0.05);
+padding: 4px 10px;
+border-radius: 6px;
+}
+.content-area {
+width: 100%;
+height: calc(100vh - 60px);
+overflow: hidden;
+background: #fff;
+}
+iframe { width: 100%; height: 100%; border: none; }
+@media (max-width: 640px) {
+.main-header { padding: 0 0.75rem; }
+.typer-box { display: none; }
+}
+</style>
 </head>
 <body>
-
-    <header class="main-header">
-        <div class="flex items-center">
-            <div class="flex items-center gap-2">
-                <button onclick="openPage('audit.html', this)" class="nav-btn active">
-                    <i class="fa-solid fa-qrcode text-lg"></i> 
-                    <span>Scanner</span>
-                </button>
-                <button onclick="openPage('hasil.html', this)" class="nav-btn">
-                    <i class="fa-solid fa-chart-line text-lg"></i> 
-                    <span>Laporan</span>
-                </button>
-            </div>
-
-            <div class="typer-box hidden md:block">
-                <span id="typerText"></span><span class="cursor">_</span>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <div class="code-tag">
-                &lt;AUDIT_LIVE_V2/&gt;
-            </div>
-            <div class="flex items-center gap-2 bg-cyan-50 px-3 py-1.5 rounded-full border border-cyan-100">
-                <div class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                </div>
-                <span class="text-[9px] font-black text-cyan-700 uppercase tracking-tighter">Encrypted</span>
-            </div>
-        </div>
-    </header>
-
-    <main class="content-area">
-        <iframe id="mainFrame" src="audit.html"></iframe>
-    </main>
-
-    <script>
-        // Data Typer
-        const phrases = [
-            "Initializing secure session...",
-            "Database link established",
-            "Hardware scanner ready",
-            "Real-time sync active",
-            "Inventory pool loaded"
-        ];
-
-        let i = 0, j = 0, isDeleting = false;
-        const typerEl = document.getElementById('typerText');
-
-        function type() {
-            let current = phrases[i];
-            typerEl.textContent = isDeleting ? current.substring(0, j--) : current.substring(0, j++);
-            let speed = isDeleting ? 40 : 80;
-            if (!isDeleting && j === current.length + 1) { speed = 2000; isDeleting = true; }
-            else if (isDeleting && j === 0) { isDeleting = false; i = (i + 1) % phrases.length; speed = 500; }
-            setTimeout(type, speed);
-        }
-
-        function openPage(url, btn) {
-            const frame = document.getElementById('mainFrame');
-            frame.style.opacity = '0.5';
-            setTimeout(() => {
-                frame.src = url;
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                frame.onload = () => frame.style.opacity = '1';
-            }, 150);
-        }
-
-        window.onload = type;
-    </script>
+<header class="main-header">
+<div class="flex items-center">
+<nav class="flex items-center gap-1.5">
+<button onclick="openPage('audit.html', this)" class="nav-btn active">
+<i class="fa-solid fa-qrcode text-base"></i> 
+<span>Scanner</span>
+</button>
+<button onclick="openPage('hasil.html', this)" class="nav-btn">
+<i class="fa-solid fa-chart-line text-base"></i> 
+<span>Laporan</span>
+</button>
+</nav>
+<div class="typer-box hidden md:block">
+<span id="typerText"></span><span class="cursor">_</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="code-tag hidden sm:block">&lt;AUDIT_LIVE/&gt;</div>
+<div class="flex items-center gap-1.5 bg-cyan-50 px-2.5 py-1 rounded-full border border-cyan-100">
+<span class="relative flex h-1.5 w-1.5">
+<span class="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
+</span>
+<span class="text-[8px] font-bold text-cyan-700 uppercase">Live</span>
+</div>
+</div>
+</header>
+<main class="content-area">
+<iframe id="mainFrame" src="audit.html"></iframe>
+</main>
+<script>
+const phrases = ["Syncing Database...", "Scanner Ready", "Secure Session Active"];
+let i = 0, j = 0, isDeleting = false;
+const typerEl = document.getElementById('typerText');
+function type() {
+const current = phrases[i];
+typerEl.textContent = isDeleting ? current.substring(0, j--) : current.substring(0, j++);
+let speed = isDeleting ? 30 : 60;
+if (!isDeleting && j === current.length + 1) { speed = 2000; isDeleting = true; }
+else if (isDeleting && j === 0) { isDeleting = false; i = (i + 1) % phrases.length; speed = 500; }
+setTimeout(type, speed);
+}
+function openPage(url, btn) {
+const frame = document.getElementById('mainFrame');
+if (frame.src.includes(url)) return;
+document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+btn.classList.add('active');
+frame.src = url;
+}
+window.onload = type;
+</script>
 </body>
 </html>
