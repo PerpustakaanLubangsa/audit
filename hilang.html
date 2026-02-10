@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missing Audit Items - Spreadsheet View</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; }
+#toastContainer { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; width: 100%; }
+@keyframes elegantPop { 0% { transform: translateY(30px) scale(0.9); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+.toast-elegant { animation: elegantPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; pointer-events: auto; }
+.excel-table { border-collapse: collapse; width: 100%; font-size: 13px; table-layout: fixed; background: white; }
+.excel-table th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 10px 12px; text-align: left; color: #475569; text-transform: uppercase; font-size: 11px; font-weight: 700; }
+.excel-table td { border: 1px solid #cbd5e1; padding: 8px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #334155; }
+.excel-table tr:nth-child(even) { background-color: #f8fafc; }
+.excel-table tr:hover { background-color: #f1f5f9; }
+.shelf-section { margin-bottom: 3rem; background: white; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); }
+.shelf-banner { background: #f8fafc; border-bottom: 2px solid #cbd5e1; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+@media print { .no-print { display: none; } body { padding: 0; background: white; } .shelf-section { border: 1px solid #000; box-shadow: none; margin-bottom: 2rem; page-break-inside: avoid; } .excel-table th, .excel-table td { border: 1px solid #000; } }
+</style>
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-6xl mx-auto">
+<div id="toastContainer"></div>
+<header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-6 no-print">
+<div>
+<h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">DATA BELUM SCAN</h1>
+<p class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Laporan barang hilang berdasarkan lokasi rak</p>
+</div>
+<div class="flex gap-2">
+<button onclick="window.print()" class="bg-white border border-slate-300 px-4 py-2 rounded-lg text-[11px] font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm">PRINT PDF</button>
+<button onclick="loadMissingReport()" class="bg-slate-800 px-5 py-2 rounded-lg text-[11px] font-bold text-white hover:bg-slate-900 transition-all shadow-sm">REFRESH</button>
+</div>
+</header>
+<div id="summaryStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 no-print">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase">Total Belum Scan</p>
+<h3 id="totalMissing" class="text-2xl font-black text-slate-800">0</h3>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase">Jumlah Rak</p>
+<h3 id="totalShelves" class="text-2xl font-black text-slate-800">0</h3>
+</div>
+</div>
+<div id="reportContainer" class="space-y-8">
+<div class="text-center p-20 text-slate-400 font-bold uppercase tracking-widest text-[10px]">Memuat data inventory...</div>
+</div>
+</div>
+<script>
+const SB_URL = 'https://heosadzwckwmbjhxydtm.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
+const client = supabase.createClient(SB_URL, SB_KEY);
+function showToast(msg, type = 'success') {
+const container = document.getElementById('toastContainer');
+const toast = document.createElement('div');
+const style = type === 'success' ? 'bg-slate-800' : 'bg-rose-600';
+toast.className = `${style} text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 toast-elegant`;
+toast.innerHTML = `<span class="font-bold text-[10px] uppercase tracking-wider">${msg}</span>`;
+container.appendChild(toast);
+setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 2000);
+}
+async function loadMissingReport() {
+const container = document.getElementById('reportContainer');
+const { data: master, error: e1 } = await client.from('ekslempar').select('kode, lokasi_rak, biblio(judul, penulis)');
+const { data: log, error: e2 } = await client.from('log_audit').select('kode_barcode');
+if (e1 || e2) { showToast("Gagal mengambil data", "error"); return; }
+const logSet = new Set(log.map(l => l.kode_barcode));
+let missingCount = 0;
+const grouped = master.reduce((acc, item) => {
+if (!logSet.has(item.kode)) {
+const shelf = item.lokasi_rak || "TANPA RAK";
+if (!acc[shelf]) acc[shelf] = [];
+acc[shelf].push({
+judul: item.biblio?.judul || '-',
+penulis: item.biblio?.penulis || '-',
+barcode: item.kode
+});
+missingCount++;
+}
+return acc;
+}, {});
+const sortedShelves = Object.keys(grouped).sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+document.getElementById('totalMissing').innerText = missingCount;
+document.getElementById('totalShelves').innerText = sortedShelves.length;
+container.innerHTML = '';
+if (missingCount === 0) {
+container.innerHTML = '<div class="text-center p-20 text-slate-400 font-bold uppercase tracking-widest text-[10px]">Semua data sudah di-scan.</div>';
+return;
+}
+sortedShelves.forEach(shelf => {
+const items = grouped[shelf];
+const section = document.createElement('div');
+section.className = 'shelf-section';
+section.innerHTML = `
+<div class="shelf-banner">
+<h2 class="text-[12px] font-extrabold text-slate-700">RAK: ${shelf}</h2>
+<span class="text-[10px] font-bold text-slate-500 uppercase">${items.length} ITEM</span>
+</div>
+<div class="overflow-x-auto">
+<table class="excel-table">
+<thead>
+<tr>
+<th width="40">NO</th>
+<th>JUDUL BUKU</th>
+<th width="200">PENULIS</th>
+<th width="160">BARCODE</th>
+</tr>
+</thead>
+<tbody>
+${items.map((item, i) => `
+<tr>
+<td style="text-align:center; color:#94a3b8; font-weight:bold;">${i+1}</td>
+<td style="font-weight:600;">${item.judul}</td>
+<td style="color:#64748b;">${item.penulis}</td>
+<td style="font-family:'JetBrains Mono'; font-weight:600; color:#0f172a;">${item.barcode}</td>
+</tr>
+`).join('')}
+</tbody>
+</table>
+</div>
+`;
+container.appendChild(section);
+});
+showToast("Data Berhasil Dimuat");
+}
+window.onload = loadMissingReport;
+</script>
+</body>
+</html>
