@@ -9,50 +9,44 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+:root { --bg-body: #f8fafc; --bg-card: #ffffff; --text-main: #1e293b; --border-color: #e2e8f0; --input-bg: #ffffff; }
+.dark { --bg-body: #000000; --bg-card: #0a0a0a; --text-main: #f1f5f9; --border-color: #1a1a1a; --input-bg: #050505; }
+body { background-color: var(--bg-body); font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; transition: background-color 0.3s ease; }
 #toastContainer { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; width: 100%; }
 @keyframes elegantSlideUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 .toast-elegant { animation: elegantSlideUp 0.3s ease-out forwards; pointer-events: auto; min-width: 250px; }
-@keyframes degImpact { 0% { transform: scale(0.98); background-color: rgba(6, 182, 212, 0.2); } 100% { transform: scale(1); background-color: white; } }
+@keyframes degImpact { 0% { transform: scale(0.98); background-color: rgba(6, 182, 212, 0.2); } 100% { transform: scale(1); background-color: transparent; } }
 .new-row-deg { animation: degImpact 0.4s ease-out forwards; border-left: 4px solid #0891b2 !important; }
 .excel-table { border-collapse: collapse; width: 100%; font-size: 13px; table-layout: fixed; }
-.excel-table th { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 12px; text-align: left; color: #64748b; text-transform: uppercase; font-size: 10px; font-weight: 800; }
-.excel-table td { border: 1px solid #e2e8f0; padding: 10px 14px; background: white; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.excel-table th { background: var(--bg-body); border: 1px solid var(--border-color); padding: 12px; text-align: left; color: #64748b; text-transform: uppercase; font-size: 10px; font-weight: 800; transition: background 0.3s ease; }
+.excel-table td { border: 1px solid var(--border-color); padding: 10px 14px; background: var(--bg-card); color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: background 0.3s ease, color 0.3s ease; }
 .sticky-header { position: sticky; top: 0; z-index: 20; }
 .vibrate-success { animation: shake 0.2s ease-in-out; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+header, .card-container { background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main); transition: all 0.3s ease; }
+input { background-color: var(--input-bg) !important; color: var(--text-main) !important; border-color: var(--border-color) !important; }
 </style>
 </head>
 <body class="p-4">
 <div class="max-w-5xl mx-auto h-[95vh] flex flex-col">
 <div id="toastContainer"></div>
-<header class="flex justify-between items-center mb-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+<header class="flex justify-between items-center mb-4 p-5 rounded-2xl border shadow-sm">
 <div class="flex items-center gap-4">
-<div class="bg-cyan-600 p-2.5 rounded-xl shadow-lg shadow-cyan-100"><i class="fa-solid fa-bolt-lightning text-white text-sm"></i></div>
+<div class="bg-cyan-600 p-2.5 rounded-xl shadow-lg shadow-cyan-100/20"><i class="fa-solid fa-bolt-lightning text-white text-sm"></i></div>
 <div>
-<h1 class="text-xl font-extrabold text-slate-800 tracking-tighter uppercase leading-none">Audit Impact</h1>
+<h1 class="text-xl font-extrabold tracking-tighter uppercase leading-none">Audit Impact</h1>
 <p id="statusInfo" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 italic">Initializing...</p>
 </div>
 </div>
-<div class="flex flex-col items-end gap-1">
-<div class="flex items-center gap-4">
-<div class="text-right">
-<span id="counter" class="text-3xl font-black text-slate-800 tabular-nums">0</span>
-<p class="text-[9px] font-black text-cyan-600 uppercase">My Items</p>
-</div>
-<button id="clearDataBtn" class="bg-rose-50 hover:bg-rose-100 text-rose-600 p-3 rounded-xl transition-colors border border-rose-100"><i class="fa-solid fa-trash-can"></i></button>
-</div>
-<div id="speedStats" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg flex gap-3">
-<span>YOU: <span id="mySpeed" class="text-cyan-600">0s/item</span></span>
-<span>OTHERS: <span id="otherSpeed" class="text-rose-500">0s/item</span></span>
-</div>
-</div>
+<button id="themeToggle" class="w-10 h-10 rounded-xl border border-slate-200 dark:border-zinc-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-zinc-900 transition-all">
+<i class="fa-solid fa-moon text-slate-600 dark:text-yellow-400"></i>
+</button>
 </header>
 <div class="relative mb-4" id="inputWrapper">
 <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none"><i class="fa-solid fa-barcode text-cyan-600 text-lg"></i></div>
-<input type="text" id="scanInput" autocomplete="off" class="w-full pl-14 pr-4 py-4 bg-white border-2 border-slate-200 rounded-xl shadow-sm focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 outline-none font-mono text-lg transition-all" placeholder="Scan or type manual...">
+<input type="text" id="scanInput" autocomplete="off" class="w-full pl-14 pr-4 py-4 border-2 rounded-xl shadow-sm focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 outline-none font-mono text-lg transition-all" placeholder="Scan or type manual...">
 </div>
-<div class="bg-white rounded-2xl shadow-xl border border-slate-200 flex-grow overflow-hidden flex flex-col">
+<div class="card-container rounded-2xl shadow-xl border flex-grow overflow-hidden flex flex-col">
 <div class="overflow-y-auto flex-grow" id="scrollArea">
 <table class="excel-table">
 <thead class="sticky-header">
@@ -61,11 +55,10 @@ body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; 
 <th>Judul Buku</th>
 <th width="150">Penulis</th>
 <th width="150">Barcode</th>
-<th width="80">Aksi</th>
 </tr>
 </thead>
 <tbody id="auditTable">
-<tr id="emptyMsg"><td colspan="5" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">No scans yet</td></tr>
+<tr id="emptyMsg"><td colspan="4" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">No scans yet</td></tr>
 </tbody>
 </table>
 </div>
@@ -75,11 +68,21 @@ body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; 
 const SB_URL = 'https://heosadzwckwmbjhxydtm.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhlb3NhZHp3Y2t3bWJqaHh5ZHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcyMDk5MDMsImV4cCI6MjA4Mjc4NTkwM30.4tUQQNsczDqX6xuzvq8C5JncxvX_RAdwr95xMaWIvhY';
 const client = supabase.createClient(SB_URL, SB_KEY);
-const DEVICE_ID = localStorage.getItem('device_id') || 'dev_' + Math.random().toString(36).substr(2, 9);
-localStorage.setItem('device_id', DEVICE_ID);
+const DEVICE_ID = sessionStorage.getItem('device_id') || 'dev_' + Math.random().toString(36).substr(2, 9);
+sessionStorage.setItem('device_id', DEVICE_ID);
 let scannedLogs = [];
 let allScannedBarcodes = new Set();
 let typingTimer;
+const themeToggle = document.getElementById('themeToggle');
+const body = document.body;
+const themeIcon = themeToggle.querySelector('i');
+if (localStorage.getItem('theme') === 'dark') { body.classList.add('dark'); themeIcon.classList.replace('fa-moon', 'fa-sun'); }
+themeToggle.addEventListener('click', () => {
+body.classList.toggle('dark');
+const isDark = body.classList.contains('dark');
+localStorage.setItem('theme', isDark ? 'dark' : 'light');
+themeIcon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
+});
 function showToast(msg, type = 'success') {
 const container = document.getElementById('toastContainer');
 const toast = document.createElement('div');
@@ -94,40 +97,23 @@ if ("vibrate" in navigator) navigator.vibrate(50);
 document.getElementById('inputWrapper').classList.add('vibrate-success');
 setTimeout(() => document.getElementById('inputWrapper').classList.remove('vibrate-success'), 200);
 }
-function calculatePace(dataArray) {
-if (dataArray.length < 2) return 0;
-const sorted = [...dataArray].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-const first = new Date(sorted[0].created_at);
-const last = new Date(sorted[sorted.length - 1].created_at);
-const diffSeconds = (last - first) / 1000;
-return diffSeconds > 0 ? (diffSeconds / (sorted.length - 1)).toFixed(1) : 0;
-}
-async function updateStats() {
-const { data, error } = await client.from('log_audit').select('device_id, kode_barcode, created_at');
-if (error || !data) return;
-allScannedBarcodes = new Set(data.map(i => i.kode_barcode));
-const myData = data.filter(x => x.device_id === DEVICE_ID);
-const otherData = data.filter(x => x.device_id !== DEVICE_ID);
-const myPace = calculatePace(myData);
-const otherPace = calculatePace(otherData);
-document.getElementById('mySpeed').innerText = myPace + 's/item';
-document.getElementById('otherSpeed').innerText = otherPace + 's/item';
-document.getElementById('counter').innerText = myData.length;
+async function syncBarcodes() {
+const { data, error } = await client.from('log_audit').select('kode_barcode');
+if (!error && data) allScannedBarcodes = new Set(data.map(i => i.kode_barcode));
 }
 function renderTable(isNewEntry = false) {
 const tbody = document.getElementById('auditTable');
 if (scannedLogs.length === 0) {
-tbody.innerHTML = `<tr id="emptyMsg"><td colspan="5" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">No scans yet</td></tr>`;
+tbody.innerHTML = `<tr id="emptyMsg"><td colspan="4" class="p-20 text-center text-slate-300 italic font-bold uppercase tracking-widest">No scans yet</td></tr>`;
 return;
 }
 const displayList = scannedLogs.slice(0, 10);
 tbody.innerHTML = displayList.map((log, index) => `
 <tr class="${(isNewEntry && index === 0) ? 'new-row-deg' : ''}">
 <td class="font-bold text-cyan-700 font-mono text-[11px]">${log.lokasi_rak || '-'}</td>
-<td class="font-bold text-slate-700 uppercase text-[10px]">${log.judul_buku}</td>
+<td class="font-bold uppercase text-[10px]">${log.judul_buku}</td>
 <td class="text-slate-500 text-[10px]">${log.penulis || '-'}</td>
 <td class="font-mono text-[10px] text-slate-400 font-bold">${log.kode_barcode}</td>
-<td class="text-center"><button onclick="deleteEntry('${log.id}', '${log.kode_barcode}')" class="text-rose-400 hover:text-rose-600 transition-colors"><i class="fa-solid fa-trash-can text-xs"></i></button></td>
 </tr>
 `).join('');
 }
@@ -155,31 +141,9 @@ scannedLogs.unshift(insertedData);
 renderTable(true);
 triggerHaptic();
 showToast("Audit Success!");
-updateStats();
 } else {
 allScannedBarcodes.delete(barcode);
 showToast("Save Failed!", "error");
-}
-}
-async function deleteEntry(id, barcode) {
-const { error } = await client.from('log_audit').delete().eq('id', id);
-if (!error) {
-scannedLogs = scannedLogs.filter(log => log.id !== id);
-allScannedBarcodes.delete(barcode);
-renderTable();
-showToast("Entry Deleted", "warning");
-updateStats();
-} else { showToast("Delete Failed", "error"); }
-}
-async function clearAllData() {
-if (confirm("Hapus seluruh data audit milik Anda?")) {
-const { error } = await client.from('log_audit').delete().eq('device_id', DEVICE_ID);
-if (!error) {
-scannedLogs = [];
-renderTable();
-showToast("Your data cleared", "error");
-await updateStats();
-}
 }
 }
 const inputField = document.getElementById('scanInput');
@@ -188,18 +152,17 @@ clearTimeout(typingTimer);
 if (e.key === 'Enter') processBarcode();
 else typingTimer = setTimeout(processBarcode, 350);
 });
-document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
 client.channel('audit-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'log_audit' }, () => {
-updateStats();
+syncBarcodes();
 }).subscribe();
 window.onload = async () => {
 inputField.focus();
 const { data: initialLogs } = await client.from('log_audit').select('*').eq('device_id', DEVICE_ID).order('created_at', { ascending: false });
 if (initialLogs) { scannedLogs = initialLogs; renderTable(); }
-await updateStats();
+await syncBarcodes();
 document.getElementById('statusInfo').innerHTML = '<span class="text-green-500">●</span> System Live';
 };
-document.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && !e.target.closest('button')) inputField.focus(); });
+document.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT' && !e.target.closest('#themeToggle')) inputField.focus(); });
 </script>
 </body>
 </html>
