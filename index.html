@@ -7,126 +7,109 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
-:root { --cyan-main: #0891b2; --bg-main: #f1f5f9; }
-body, html { height: 100%; margin: 0; overflow: hidden; background: var(--bg-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-.main-header {
-width: 100%;
-height: 60px;
-background: #fff;
-border-bottom: 1px solid rgba(0,0,0,0.05);
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 0 1.5rem;
-z-index: 100;
-}
-.nav-btn { 
-display: flex;
-align-items: center;
-height: 38px;
-padding: 0 12px;
-border-radius: 10px;
-color: #155e75;
-transition: all 0.2s ease;
+body, html { height: 100%; margin: 0; overflow: hidden; background: #ffffff; font-family: sans-serif; }
+#sidebar {
+position: fixed;
+top: 0;
+left: -250px;
+width: 250px;
+height: 100%;
 background: #f8fafc;
-border: 1px solid transparent;
+z-index: 1000;
+transition: 0.2s;
+border-right: 1px solid #e2e8f0;
 }
-.nav-btn span {
-font-size: 11px;
-font-weight: 700;
-text-transform: uppercase;
-display: none;
-margin-left: 8px;
-}
-.nav-btn.active { 
-background: var(--cyan-main); 
-color: white;
-}
-.nav-btn.active span { display: inline; }
-.typer-box {
-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-font-size: 10px;
-color: #0e7490;
-text-transform: uppercase;
-border-left: 1px solid #ddd;
-padding-left: 12px;
-margin-left: 12px;
-}
-.cursor { animation: blink 0.8s infinite steps(1); }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-.code-tag {
-font-family: monospace;
-font-size: 11px;
-color: var(--cyan-main);
-font-weight: 700;
-background: rgba(8, 145, 178, 0.05);
-padding: 4px 10px;
-border-radius: 6px;
-}
-.content-area {
+#sidebar.open { left: 0; }
+.overlay {
+position: fixed;
+top: 0;
+left: 0;
 width: 100%;
-height: calc(100vh - 60px);
-overflow: hidden;
-background: #fff;
+height: 100%;
+background: rgba(0,0,0,0.2);
+z-index: 999;
+display: none;
 }
+.overlay.active { display: block; }
+.menu-btn {
+position: fixed;
+top: 10px;
+left: 10px;
+z-index: 1001;
+width: 40px;
+height: 40px;
+background: #fff;
+border: 1px solid #e2e8f0;
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+color: #334155;
+}
+.nav-item {
+display: flex;
+align-items: center;
+padding: 12px 20px;
+color: #475569;
+font-size: 13px;
+font-weight: 600;
+text-transform: uppercase;
+border-bottom: 1px solid #f1f5f9;
+}
+.nav-item i { width: 24px; }
+.nav-item.active { color: #0891b2; background: #f1f5f9; }
+.content { width: 100%; height: 100vh; }
 iframe { width: 100%; height: 100%; border: none; }
-@media (max-width: 640px) {
-.main-header { padding: 0 0.75rem; }
-.typer-box { display: none; }
+.status {
+position: fixed;
+top: 15px;
+right: 15px;
+font-size: 10px;
+font-weight: 800;
+color: #94a3b8;
+text-transform: uppercase;
+letter-spacing: 1px;
 }
 </style>
 </head>
 <body>
-<header class="main-header">
-<div class="flex items-center">
-<nav class="flex items-center gap-1.5">
-<button onclick="openPage('audit.html', this)" class="nav-btn active">
-<i class="fa-solid fa-qrcode text-base"></i> 
-<span>Scanner</span>
-</button>
-<button onclick="openPage('hasil.html', this)" class="nav-btn">
-<i class="fa-solid fa-chart-line text-base"></i> 
-<span>Laporan</span>
-</button>
+<div class="menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<aside id="sidebar">
+<div class="p-6 border-bottom">
+<h1 class="text-lg font-bold text-slate-800">AUDIT PRO</h1>
+</div>
+<nav>
+<a href="javascript:void(0)" onclick="openPage('audit.html', this)" class="nav-item active">
+<i class="fa-solid fa-qrcode"></i>Scanner
+</a>
+<a href="javascript:void(0)" onclick="openPage('hasil.html', this)" class="nav-item">
+<i class="fa-solid fa-list-check"></i>Laporan
+</a>
+<a href="javascript:void(0)" onclick="openPage('hilang.html', this)" class="nav-item">
+<i class="fa-solid fa-circle-xmark"></i>Belum Scan
+</a>
 </nav>
-<div class="typer-box hidden md:block">
-<span id="typerText"></span><span class="cursor">_</span>
-</div>
-</div>
-<div class="flex items-center gap-3">
-<div class="code-tag hidden sm:block">&lt;AUDIT_LIVE/&gt;</div>
-<div class="flex items-center gap-1.5 bg-cyan-50 px-2.5 py-1 rounded-full border border-cyan-100">
-<span class="relative flex h-1.5 w-1.5">
-<span class="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-<span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
-</span>
-<span class="text-[8px] font-bold text-cyan-700 uppercase">Live</span>
-</div>
-</div>
-</header>
-<main class="content-area">
+</aside>
+<div class="status">Live Session</div>
+<main class="content">
 <iframe id="mainFrame" src="audit.html"></iframe>
 </main>
 <script>
-const phrases = ["Syncing Database...", "Scanner Ready", "Secure Session Active"];
-let i = 0, j = 0, isDeleting = false;
-const typerEl = document.getElementById('typerText');
-function type() {
-const current = phrases[i];
-typerEl.textContent = isDeleting ? current.substring(0, j--) : current.substring(0, j++);
-let speed = isDeleting ? 30 : 60;
-if (!isDeleting && j === current.length + 1) { speed = 2000; isDeleting = true; }
-else if (isDeleting && j === 0) { isDeleting = false; i = (i + 1) % phrases.length; speed = 500; }
-setTimeout(type, speed);
+function toggleSidebar() {
+document.getElementById('sidebar').classList.toggle('open');
+document.getElementById('overlay').classList.toggle('active');
 }
 function openPage(url, btn) {
 const frame = document.getElementById('mainFrame');
-if (frame.src.includes(url)) return;
-document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-btn.classList.add('active');
+if (!frame.src.includes(url)) {
 frame.src = url;
+document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+btn.classList.add('active');
 }
-window.onload = type;
+toggleSidebar();
+}
 </script>
 </body>
 </html>
